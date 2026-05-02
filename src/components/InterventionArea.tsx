@@ -25,10 +25,12 @@ export function InterventionArea({ onContinue, onEnd, round, disabled }: Interve
       <DecorativeDivider className="mb-6" />
 
       <h3 className="mb-2 text-center font-serif text-xl text-primary">
-        Round {round} encerrado
+        {round === 1 ? "A primeira taça foi servida" : `A ${round}ª taça foi servida`}
       </h3>
       <p className="mb-4 text-center font-sans text-sm text-text/60">
-        Adicione uma reflexão ou deixe em branco para continuar o debate.
+        {round === 1
+          ? "Os filósofos ouviram seu dilema. Tem algo a acrescentar antes da próxima rodada?"
+          : "A taça passa novamente. Uma palavra sua, ou deixe que a conversa siga."}
       </p>
 
       <div className="flex flex-col gap-4">

@@ -76,7 +76,7 @@ function CollapsibleRound({
         className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left"
       >
         <span className="font-sans text-xs text-text/40">
-          Round {round} {!open && <span className="text-text/30">— {snippet}</span>}
+          {round === 1 ? "Primeira taça" : `${round}ª taça`} {!open && <span className="text-text/30">— {snippet}</span>}
         </span>
         <span className="shrink-0 text-text/30 transition-transform duration-200" style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)" }}>
           ▾
