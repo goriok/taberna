@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useReducer, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { DebateState, PhilosopherResponse } from "@/types/debate";
+import { DebateState, PhilosopherResponse, TableEvent } from "@/types/debate";
 import { philosophers } from "@/philosophers";
 import { DecorativeDivider } from "@/components/DecorativeDivider";
 import { DebateGrid } from "@/components/DebateGrid";
@@ -22,6 +22,8 @@ const initialState: DebateState = {
   summary: null,
   dilemma: "",
   sessionId: "",
+  activePhilosopherIds: [],
+  tableEvents: [],
 };
 
 function loadPersistedState(): DebateState {
@@ -60,6 +62,8 @@ function loadPersistedState(): DebateState {
       summary: saved.summary ?? null,
       dilemma: saved.dilemma ?? "",
       sessionId: saved.sessionId ?? "",
+      activePhilosopherIds: saved.activePhilosopherIds ?? [],
+      tableEvents: saved.tableEvents ?? [],
     };
   } catch {
     return initialState;
@@ -82,14 +86,15 @@ function clearPersistedState() {
 }
 
 type Action =
-  | { type: "SUBMIT_DILEMMA"; dilemma: string; sessionId: string }
+  | { type: "SUBMIT_DILEMMA"; dilemma: string; sessionId: string; activePhilosopherIds: string[] }
   | { type: "PHILOSOPHER_START"; philosopherName: string; round: number }
   | { type: "PHILOSOPHER_CHUNK"; philosopherName: string; round: number; chunk: string }
   | { type: "PHILOSOPHER_COMPLETE"; philosopherName: string; round: number; content: string }
   | { type: "PHILOSOPHER_ERROR"; philosopherName: string; round: number; error: string }
   | { type: "ROUND_COMPLETE"; round: number }
   | { type: "WAITING_FOR_USER" }
-  | { type: "USER_INTERVENED"; round: number; text: string }
+  | { type: "USER_INTERVENED"; round: number; text: string; activePhilosopherIds: string[] }
+  | { type: "PHILOSOPHER_STATUS"; philosopherName: string; status: "left" | "joined"; message: string }
   | { type: "DEBATE_COMPLETE" }
   | { type: "SET_SUMMARY"; content: string }
   | { type: "RESET" };
@@ -116,6 +121,7 @@ function debateReducer(state: DebateState, action: Action): DebateState {
         userInterventions: {},
         currentRound: 1,
         summary: null,
+        activePhilosopherIds: action.activePhilosopherIds,
       };
 
     case "PHILOSOPHER_START": {
@@ -168,9 +174,19 @@ function debateReducer(state: DebateState, action: Action): DebateState {
       return {
         ...state,
         phase: "debating",
+        activePhilosopherIds: action.activePhilosopherIds,
         userInterventions: action.text.trim()
           ? { ...state.userInterventions, [action.round]: action.text }
           : state.userInterventions,
+      };
+
+    case "PHILOSOPHER_STATUS":
+      return {
+        ...state,
+        tableEvents: [
+          ...state.tableEvents,
+          { philosopherName: action.philosopherName, status: action.status, message: action.message, afterRound: state.currentRound },
+        ],
       };
 
     case "DEBATE_COMPLETE":
@@ -225,7 +241,19 @@ export default function Home() {
     try { localStorage.setItem("taberna-guests", JSON.stringify([...next])); } catch { /* ignore */ }
   };
 
-  const activePhilosophers = philosophers.filter((p) => selectedIds.has(p.id));
+  // During idle: use selectedIds. During debate: use state.activePhilosopherIds
+  const activePhilosophers = state.phase === "idle" || state.activePhilosopherIds.length === 0
+    ? philosophers.filter((p) => selectedIds.has(p.id))
+    : philosophers.filter((p) => state.activePhilosopherIds.includes(p.id));
+
+  // All philosophers ever seen in this debate (for the table manager)
+  const debatePhilosophers = state.phase === "idle"
+    ? philosophers.filter((p) => selectedIds.has(p.id))
+    : philosophers.filter((p) => {
+        const everSpoke = state.responses.some((r) => r.philosopherName === p.name);
+        const isActive = state.activePhilosopherIds.includes(p.id);
+        return everSpoke || isActive || selectedIds.has(p.id);
+      });
 
   // Persist state on every change (skip idle — nothing to restore)
   useEffect(() => {
@@ -286,6 +314,9 @@ export default function Home() {
                 pausedForUser = true;
                 dispatch({ type: "WAITING_FOR_USER" });
                 break;
+              case "philosopher-status":
+                dispatch({ type: "PHILOSOPHER_STATUS", philosopherName: parsed.philosopherName, status: parsed.status, message: parsed.message });
+                break;
               case "debate-complete":
                 dispatch({ type: "DEBATE_COMPLETE" });
                 break;
@@ -305,14 +336,15 @@ export default function Home() {
     if (dilemmaInput.length < MIN_DILEMMA_LENGTH) return;
 
     const sessionId = generateSessionId();
-    dispatch({ type: "SUBMIT_DILEMMA", dilemma: dilemmaInput, sessionId });
+    const ids = [...selectedIds];
+    dispatch({ type: "SUBMIT_DILEMMA", dilemma: dilemmaInput, sessionId, activePhilosopherIds: ids });
     setIsLoading(true);
 
     try {
       const response = await fetch("/api/debate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dilemma: dilemmaInput, sessionId, philosopherIds: [...selectedIds] }),
+        body: JSON.stringify({ dilemma: dilemmaInput, sessionId, philosopherIds: ids }),
       });
       if (!response.ok) { setIsLoading(false); return; }
       await consumeSSE(response);
@@ -321,17 +353,17 @@ export default function Home() {
     }
   };
 
-  const handleIntervention = async (text: string, end: boolean) => {
+  const handleIntervention = async (text: string, end: boolean, activeIds: string[]) => {
     if (!state.sessionId) return;
 
-    dispatch({ type: "USER_INTERVENED", round: state.currentRound, text });
+    dispatch({ type: "USER_INTERVENED", round: state.currentRound, text, activePhilosopherIds: activeIds });
     setIsLoading(true);
 
     try {
       const response = await fetch("/api/debate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "intervene", sessionId: state.sessionId, text, end }),
+        body: JSON.stringify({ action: "intervene", sessionId: state.sessionId, text, end, philosopherIds: activeIds }),
       });
       if (!response.ok) { setIsLoading(false); return; }
       await consumeSSE(response);
@@ -475,18 +507,22 @@ export default function Home() {
               )}
 
               <DebateGrid
-                philosophers={activePhilosophers}
+                philosophers={debatePhilosophers}
+                activeIds={state.activePhilosopherIds}
                 responses={state.responses}
                 currentRound={state.currentRound}
+                tableEvents={state.tableEvents}
                 isWaiting={isLoading && state.phase === "debating"}
               />
 
               {state.phase === "user-intervention" && (
                 <InterventionArea
-                  onContinue={(text) => handleIntervention(text, false)}
-                  onEnd={(text) => handleIntervention(text, true)}
+                  onContinue={(text, ids) => handleIntervention(text, false, ids)}
+                  onEnd={(text, ids) => handleIntervention(text, true, ids)}
                   round={state.currentRound}
                   disabled={isLoading}
+                  allPhilosophers={philosophers}
+                  activeIds={state.activePhilosopherIds}
                 />
               )}
             </motion.section>

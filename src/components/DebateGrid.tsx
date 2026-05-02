@@ -3,17 +3,19 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { PhilosopherConfig } from "@/types/philosopher";
-import { PhilosopherResponse } from "@/types/debate";
+import { PhilosopherResponse, TableEvent } from "@/types/debate";
 import { PhilosopherCard } from "./PhilosopherCard";
 
 interface DebateGridProps {
   philosophers: PhilosopherConfig[];
+  activeIds: string[];
   responses: PhilosopherResponse[];
   currentRound: number;
+  tableEvents: TableEvent[];
   isWaiting?: boolean;
 }
 
-export function DebateGrid({ philosophers, responses, currentRound, isWaiting }: DebateGridProps) {
+export function DebateGrid({ philosophers, activeIds, responses, currentRound, tableEvents, isWaiting }: DebateGridProps) {
   return (
     <motion.div
       initial="hidden"
@@ -29,6 +31,9 @@ export function DebateGrid({ philosophers, responses, currentRound, isWaiting }:
         const philosopherResponses = responses.filter(
           (r) => r.philosopherName === philosopher.name
         );
+        const philosopherTableEvents = tableEvents.filter(
+          (e) => e.philosopherName === philosopher.name
+        );
 
         return (
           <motion.div
@@ -43,7 +48,9 @@ export function DebateGrid({ philosophers, responses, currentRound, isWaiting }:
               philosopher={philosopher}
               responses={philosopherResponses}
               currentRound={currentRound}
-              isWaiting={isWaiting}
+              tableEvents={philosopherTableEvents}
+              isWaiting={isWaiting && activeIds.includes(philosopher.id)}
+              isAbsent={activeIds.length > 0 && !activeIds.includes(philosopher.id)}
             />
           </motion.div>
         );

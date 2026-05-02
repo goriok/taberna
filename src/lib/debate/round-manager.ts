@@ -93,23 +93,65 @@ function buildPrompt(
   return lines.join("\n");
 }
 
-// Yielded value is { end: boolean; text: string }
-type UserInput = { end: boolean; text: string };
+type UserInput = { end: boolean; text: string; philosopherIds?: string[] };
+
+const TABLE_PHRASES: Record<string, { left: string; joined: string }> = {
+  heidegger: {
+    left: "Heidegger se recolhe ao silêncio — a pergunta pelo ser, por ora, pede solidão.",
+    joined: "Heidegger puxa a cadeira de volta. O ser reclama sua presença.",
+  },
+  nietzsche: {
+    left: "Nietzsche se levanta, ri sozinho e sai — talvez para dançar.",
+    joined: "Nietzsche retorna com o copo cheio. O eterno retorno o trouxe de volta.",
+  },
+  schopenhauer: {
+    left: "Schopenhauer suspira, murmura que tudo é vontade inútil, e se retira.",
+    joined: "Schopenhauer arrasta a cadeira de volta, contrariado como sempre.",
+  },
+  camus: {
+    left: "Camus acende um cigarro, sorri para o absurdo e sai pela porta.",
+    joined: "Camus volta — afinal, é preciso imaginar o filósofo feliz na taberna.",
+  },
+  han: {
+    left: "Han se dissolve em silêncio, como quem nunca esteve totalmente presente.",
+    joined: "Han retorna, trazendo consigo o peso suave da transparência.",
+  },
+  kosik: {
+    left: "Kosik dobra seus papéis, murmurou algo sobre pseudoconcreticidade, e some.",
+    joined: "Kosik reaparece com novos apontamentos. A dialética o chamou de volta.",
+  },
+  sennett: {
+    left: "Sennett se levanta — vai observar a cidade lá fora, diz ele.",
+    joined: "Sennett retorna, com histórias de quem encontrou pelo caminho.",
+  },
+};
+
+const DEFAULT_PHRASES = {
+  left: (name: string) => `${name} se retira da mesa por ora.`,
+  joined: (name: string) => `${name} retorna à mesa.`,
+};
+
+function getStatusMessage(philosopherId: string, philosopherName: string, status: "left" | "joined"): string {
+  const phrases = TABLE_PHRASES[philosopherId];
+  if (phrases) return phrases[status];
+  return DEFAULT_PHRASES[status](philosopherName);
+}
 
 export async function* debateOrchestrator(
   dilemma: string,
-  philosophers: PhilosopherConfig[],
+  initialPhilosophers: PhilosopherConfig[],
+  allPhilosophers: PhilosopherConfig[],
   _sessionId: string
 ): AsyncGenerator<DebateEvent, void, UserInput | undefined> {
   if (!dilemma || dilemma.trim().length === 0) {
     throw new Error("Dilemma cannot be empty");
   }
 
-  // allResponses[round] = Map<philosopherName, content>
   const allResponses = new Map<number, Map<string, string>>();
   const userInterventions = new Map<number, string>();
 
   let round = 1;
+  let activePhilosophers = [...initialPhilosophers];
 
   while (true) {
     const roundResponses = new Map<string, string>();
@@ -118,8 +160,7 @@ export async function* debateOrchestrator(
     const prompt = buildPrompt(dilemma, allResponses, userInterventions, round);
 
     if (round === 1) {
-      // Round 1: all philosophers speak in parallel
-      const streams = philosophers.map((p) => philosopherStream(p, round, prompt));
+      const streams = activePhilosophers.map((p) => philosopherStream(p, round, prompt));
       for await (const event of mergeAsyncIterables(streams)) {
         yield event;
         if (event.type === "philosopher-complete") {
@@ -127,8 +168,7 @@ export async function* debateOrchestrator(
         }
       }
     } else {
-      // Subsequent rounds: sequential, AI-selected order
-      const remaining = [...philosophers];
+      const remaining = [...activePhilosophers];
       while (remaining.length > 0) {
         const context = [...roundResponses.entries()]
           .map(([n, c]) => `${n}: ${c}`)
@@ -149,7 +189,6 @@ export async function* debateOrchestrator(
 
     yield { type: "round-complete", round };
 
-    // Pause and ask user what to do
     const userInput = yield { type: "user-intervention" };
     const text = userInput?.text ?? "";
     const end = userInput?.end ?? false;
@@ -161,6 +200,26 @@ export async function* debateOrchestrator(
     if (end) {
       yield { type: "debate-complete", summary: "" };
       return;
+    }
+
+    // Handle table changes for next round
+    if (userInput?.philosopherIds && userInput.philosopherIds.length > 0) {
+      const newIds = new Set(userInput.philosopherIds);
+      const prevIds = new Set(activePhilosophers.map((p) => p.id));
+
+      for (const p of activePhilosophers) {
+        if (!newIds.has(p.id)) {
+          yield { type: "philosopher-status", philosopherName: p.name, status: "left", message: getStatusMessage(p.id, p.name, "left") };
+        }
+      }
+      for (const id of newIds) {
+        if (!prevIds.has(id)) {
+          const p = allPhilosophers.find((ph) => ph.id === id);
+          if (p) yield { type: "philosopher-status", philosopherName: p.name, status: "joined", message: getStatusMessage(p.id, p.name, "joined") };
+        }
+      }
+
+      activePhilosophers = allPhilosophers.filter((p) => newIds.has(p.id));
     }
 
     round++;

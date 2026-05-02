@@ -103,7 +103,7 @@ async function handleInitial(body: unknown, request: NextRequest) {
     },
   });
 
-  const generator = debateOrchestrator(dilemma, debatePhilosophers, sessionId);
+  const generator = debateOrchestrator(dilemma, debatePhilosophers, philosophers, sessionId);
   activeGenerators.set(sessionId, generator);
 
   const stream = new ReadableStream({
@@ -180,6 +180,9 @@ async function handleIntervention(body: Record<string, unknown>) {
   const sessionId = body.sessionId;
   const text = typeof body.text === "string" ? body.text : "";
   const end = body.end === true;
+  const philosopherIds = Array.isArray(body.philosopherIds)
+    ? (body.philosopherIds as unknown[]).filter((id): id is string => typeof id === "string")
+    : undefined;
 
   if (typeof sessionId !== "string" || !sessionId) {
     return NextResponse.json(
@@ -199,7 +202,7 @@ async function handleIntervention(body: Record<string, unknown>) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        let result = await generator.next({ text, end });
+        let result = await generator.next({ text, end, philosopherIds });
 
         while (!result.done) {
           const event = result.value;

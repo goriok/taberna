@@ -21,6 +21,13 @@ export interface PhilosopherResponse {
   status: ResponseStatus;
 }
 
+export interface TableEvent {
+  philosopherName: string;
+  status: "left" | "joined";
+  message: string;
+  afterRound: number;
+}
+
 export interface DebateState {
   phase: DebatePhase;
   responses: PhilosopherResponse[];
@@ -30,6 +37,10 @@ export interface DebateState {
   summary: string | null;
   dilemma: string;
   sessionId: string;
+  /** ids of philosophers currently at the table */
+  activePhilosopherIds: string[];
+  /** narrative events when philosophers join/leave */
+  tableEvents: TableEvent[];
 }
 
 export const DebateRequestSchema = z.object({
@@ -46,6 +57,7 @@ export type DebateEvent =
   | { type: "philosopher-complete"; philosopherName: string; round: number; content: string }
   | { type: "philosopher-error"; philosopherName: string; round: number; error: string }
   | { type: "round-complete"; round: number }
+  | { type: "philosopher-status"; philosopherName: string; status: "left" | "joined"; message: string }
   | { type: "user-intervention" }
   | { type: "debate-complete"; summary: string }
   | { type: "summary"; content: string };

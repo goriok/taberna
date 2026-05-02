@@ -3,13 +3,15 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PhilosopherConfig } from "@/types/philosopher";
-import { PhilosopherResponse } from "@/types/debate";
+import { PhilosopherResponse, TableEvent } from "@/types/debate";
 
 interface PhilosopherCardProps {
   philosopher: PhilosopherConfig;
   responses: PhilosopherResponse[];
   currentRound: number;
+  tableEvents?: TableEvent[];
   isWaiting?: boolean;
+  isAbsent?: boolean;
 }
 
 function renderMarkdown(text: string): React.ReactNode[] {
@@ -98,7 +100,9 @@ export function PhilosopherCard({
   philosopher,
   responses,
   currentRound,
+  tableEvents = [],
   isWaiting = false,
+  isAbsent = false,
 }: PhilosopherCardProps) {
   const isDisabled = philosopher.enabled === false;
   const avatarLetter = philosopher.name.charAt(0).toUpperCase();
@@ -109,8 +113,8 @@ export function PhilosopherCard({
   const isStreaming = status === "streaming";
   const showTyping = isWaiting && !isStreaming;
 
-  const borderClass = isDisabled
-    ? "border-card-border opacity-40 grayscale"
+  const borderClass = isDisabled || isAbsent
+    ? "border-card-border opacity-40"
     : isStreaming || showTyping
       ? "border-amber"
       : "border-accent";
@@ -131,17 +135,20 @@ export function PhilosopherCard({
       {/* Header */}
       <div className="flex items-center gap-3">
         <div
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-accent bg-bg text-lg font-bold text-primary ${isStreaming || showTyping ? "avatar-thinking" : ""}`}
+          className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-accent bg-bg text-lg font-bold text-primary ${isStreaming || showTyping ? "avatar-thinking" : ""}`}
           aria-hidden="true"
         >
           {avatarLetter}
+          {isAbsent && (
+            <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-card border border-card-border text-[8px] text-text/40">↗</span>
+          )}
         </div>
         <div className="flex flex-col flex-1 min-w-0">
           <span className="font-serif text-base font-bold text-text">
             {philosopher.name}
           </span>
           <span className="font-sans text-xs text-primary">
-            {philosopher.era} · {philosopher.shortName}
+            {isAbsent ? "ausente da mesa" : `${philosopher.era} · ${philosopher.shortName}`}
           </span>
         </div>
         {/* Thinking dots — always visible when active, even with existing content */}
@@ -177,6 +184,17 @@ export function PhilosopherCard({
               content={r.content}
               isLast={false}
             />
+          ))}
+        </div>
+      )}
+
+      {/* Table events (joined/left narrative) */}
+      {tableEvents.length > 0 && (
+        <div className="flex flex-col gap-1">
+          {tableEvents.map((e, i) => (
+            <p key={i} className={`font-sans text-xs italic leading-snug ${e.status === "left" ? "text-text/30" : "text-primary/60"}`}>
+              {e.message}
+            </p>
           ))}
         </div>
       )}
