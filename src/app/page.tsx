@@ -11,7 +11,6 @@ import { SummaryDisplay } from "@/components/SummaryDisplay";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const MIN_DILEMMA_LENGTH = 10;
-const MAX_DILEMMA_LENGTH = 500;
 
 const initialState: DebateState = {
   phase: "idle",
@@ -244,11 +243,7 @@ export default function Home() {
   );
 
   const handleSubmitDilemma = async () => {
-    if (
-      dilemmaInput.length < MIN_DILEMMA_LENGTH ||
-      dilemmaInput.length > MAX_DILEMMA_LENGTH
-    )
-      return;
+    if (dilemmaInput.length < MIN_DILEMMA_LENGTH) return;
 
     const sessionId = generateSessionId();
     dispatch({ type: "SUBMIT_DILEMMA", dilemma: dilemmaInput, sessionId });
@@ -343,9 +338,7 @@ export default function Home() {
     };
   }, [state.phase, state.sessionId, state.responses]);
 
-  const isSubmitDisabled =
-    dilemmaInput.length < MIN_DILEMMA_LENGTH ||
-    dilemmaInput.length > MAX_DILEMMA_LENGTH;
+  const isSubmitDisabled = dilemmaInput.length < MIN_DILEMMA_LENGTH;
 
   const showGrid =
     state.phase === "round1" ||
@@ -409,18 +402,7 @@ export default function Home() {
                 data-testid="dilemma-input"
               />
 
-              <div className="mt-2 flex items-center justify-between">
-                <span
-                  className={`font-sans text-xs ${
-                    dilemmaInput.length > MAX_DILEMMA_LENGTH
-                      ? "text-red-600"
-                      : "text-text/60"
-                  }`}
-                  data-testid="char-counter"
-                >
-                  {dilemmaInput.length}/{MAX_DILEMMA_LENGTH}
-                </span>
-
+              <div className="mt-2 flex items-center justify-end">
                 <button
                   onClick={handleSubmitDilemma}
                   disabled={isSubmitDisabled || isLoading}
