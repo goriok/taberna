@@ -15,6 +15,8 @@ const MIN_DILEMMA_LENGTH = 10;
 const initialState: DebateState = {
   phase: "idle",
   responses: [],
+  userInterventions: {},
+  currentRound: 1,
   summary: null,
   dilemma: "",
   sessionId: "",
@@ -28,6 +30,7 @@ type Action =
   | { type: "PHILOSOPHER_ERROR"; philosopherName: string; round: number; error: string }
   | { type: "ROUND_COMPLETE"; round: number }
   | { type: "WAITING_FOR_USER" }
+  | { type: "USER_INTERVENED"; round: number; text: string }
   | { type: "DEBATE_COMPLETE" }
   | { type: "SET_SUMMARY"; content: string }
   | { type: "RESET" };
@@ -47,19 +50,17 @@ function debateReducer(state: DebateState, action: Action): DebateState {
     case "SUBMIT_DILEMMA":
       return {
         ...state,
-        phase: "round1",
+        phase: "debating",
         dilemma: action.dilemma,
         sessionId: action.sessionId,
         responses: [],
+        userInterventions: {},
+        currentRound: 1,
         summary: null,
       };
 
     case "PHILOSOPHER_START": {
-      const idx = findResponseIndex(
-        state.responses,
-        action.philosopherName,
-        action.round,
-      );
+      const idx = findResponseIndex(state.responses, action.philosopherName, action.round);
       if (idx >= 0) {
         const updated = [...state.responses];
         updated[idx] = { ...updated[idx], status: "streaming" };
@@ -69,22 +70,13 @@ function debateReducer(state: DebateState, action: Action): DebateState {
         ...state,
         responses: [
           ...state.responses,
-          {
-            philosopherName: action.philosopherName,
-            round: action.round,
-            content: "",
-            status: "streaming",
-          },
+          { philosopherName: action.philosopherName, round: action.round, content: "", status: "streaming" },
         ],
       };
     }
 
     case "PHILOSOPHER_CHUNK": {
-      const idx = findResponseIndex(
-        state.responses,
-        action.philosopherName,
-        action.round,
-      );
+      const idx = findResponseIndex(state.responses, action.philosopherName, action.round);
       if (idx < 0) return state;
       const updated = [...state.responses];
       updated[idx] = { ...updated[idx], content: updated[idx].content + action.chunk };
@@ -92,41 +84,35 @@ function debateReducer(state: DebateState, action: Action): DebateState {
     }
 
     case "PHILOSOPHER_COMPLETE": {
-      const idx = findResponseIndex(
-        state.responses,
-        action.philosopherName,
-        action.round,
-      );
+      const idx = findResponseIndex(state.responses, action.philosopherName, action.round);
       if (idx < 0) return state;
       const updated = [...state.responses];
-      updated[idx] = {
-        ...updated[idx],
-        content: action.content,
-        status: "complete",
-      };
+      updated[idx] = { ...updated[idx], content: action.content, status: "complete" };
       return { ...state, responses: updated };
     }
 
     case "PHILOSOPHER_ERROR": {
-      const idx = findResponseIndex(
-        state.responses,
-        action.philosopherName,
-        action.round,
-      );
+      const idx = findResponseIndex(state.responses, action.philosopherName, action.round);
       if (idx < 0) return state;
       const updated = [...state.responses];
       updated[idx] = { ...updated[idx], status: "error" };
       return { ...state, responses: updated };
     }
 
-    case "ROUND_COMPLETE": {
-      if (action.round === 1) return { ...state, phase: "round2" };
-      if (action.round === 2) return { ...state, phase: "round3" };
-      return state;
-    }
+    case "ROUND_COMPLETE":
+      return { ...state, currentRound: action.round };
 
     case "WAITING_FOR_USER":
       return { ...state, phase: "user-intervention" };
+
+    case "USER_INTERVENED":
+      return {
+        ...state,
+        phase: "debating",
+        userInterventions: action.text.trim()
+          ? { ...state.userInterventions, [action.round]: action.text }
+          : state.userInterventions,
+      };
 
     case "DEBATE_COMPLETE":
       return { ...state, phase: "summary" };
@@ -155,95 +141,70 @@ export default function Home() {
   const [dilemmaInput, setDilemmaInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const consumeSSE = useCallback(
-    async (response: Response) => {
-      const reader = response.body?.getReader();
-      if (!reader) {
-        setIsLoading(false);
-        return;
-      }
+  const consumeSSE = useCallback(async (response: Response) => {
+    const reader = response.body?.getReader();
+    if (!reader) {
+      setIsLoading(false);
+      return;
+    }
 
-      const decoder = new TextDecoder();
-      let buffer = "";
-      let pausedForUser = false;
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let pausedForUser = false;
 
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) {
-            if (!pausedForUser) {
-              dispatch({ type: "DEBATE_COMPLETE" });
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          if (!pausedForUser) dispatch({ type: "DEBATE_COMPLETE" });
+          break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        const events = buffer.split("\n\n");
+        buffer = events.pop() ?? "";
+
+        for (const eventText of events) {
+          if (!eventText.trim()) continue;
+          const dataMatch = eventText.match(/^data: (.+)$/m);
+          if (!dataMatch) continue;
+
+          try {
+            const parsed = JSON.parse(dataMatch[1]);
+            switch (parsed.type) {
+              case "philosopher-start":
+                dispatch({ type: "PHILOSOPHER_START", philosopherName: parsed.philosopherName, round: parsed.round });
+                break;
+              case "philosopher-chunk":
+                dispatch({ type: "PHILOSOPHER_CHUNK", philosopherName: parsed.philosopherName, round: parsed.round, chunk: parsed.chunk });
+                break;
+              case "philosopher-complete":
+                dispatch({ type: "PHILOSOPHER_COMPLETE", philosopherName: parsed.philosopherName, round: parsed.round, content: parsed.content });
+                break;
+              case "philosopher-error":
+                dispatch({ type: "PHILOSOPHER_ERROR", philosopherName: parsed.philosopherName, round: parsed.round, error: parsed.error });
+                break;
+              case "round-complete":
+                dispatch({ type: "ROUND_COMPLETE", round: parsed.round });
+                break;
+              case "waiting-for-user":
+                pausedForUser = true;
+                dispatch({ type: "WAITING_FOR_USER" });
+                break;
+              case "debate-complete":
+                dispatch({ type: "DEBATE_COMPLETE" });
+                break;
             }
-            break;
-          }
-
-          buffer += decoder.decode(value, { stream: true });
-          const events = buffer.split("\n\n");
-          buffer = events.pop() ?? "";
-
-          for (const eventText of events) {
-            if (!eventText.trim()) continue;
-            const dataMatch = eventText.match(/^data: (.+)$/m);
-            if (!dataMatch) continue;
-
-            try {
-              const parsed = JSON.parse(dataMatch[1]);
-
-              switch (parsed.type) {
-                case "philosopher-start":
-                  dispatch({
-                    type: "PHILOSOPHER_START",
-                    philosopherName: parsed.philosopherName,
-                    round: parsed.round,
-                  });
-                  break;
-                case "philosopher-chunk":
-                  dispatch({
-                    type: "PHILOSOPHER_CHUNK",
-                    philosopherName: parsed.philosopherName,
-                    round: parsed.round,
-                    chunk: parsed.chunk,
-                  });
-                  break;
-                case "philosopher-complete":
-                  dispatch({
-                    type: "PHILOSOPHER_COMPLETE",
-                    philosopherName: parsed.philosopherName,
-                    round: parsed.round,
-                    content: parsed.content,
-                  });
-                  break;
-                case "philosopher-error":
-                  dispatch({
-                    type: "PHILOSOPHER_ERROR",
-                    philosopherName: parsed.philosopherName,
-                    round: parsed.round,
-                    error: parsed.error,
-                  });
-                  break;
-                case "round-complete":
-                  dispatch({ type: "ROUND_COMPLETE", round: parsed.round });
-                  break;
-                case "waiting-for-user":
-                  pausedForUser = true;
-                  dispatch({ type: "WAITING_FOR_USER" });
-                  break;
-                case "debate-complete":
-                  dispatch({ type: "DEBATE_COMPLETE" });
-                  break;
-              }
-            } catch {
-              /* malformed SSE events are silently skipped */
-            }
+          } catch {
+            /* malformed SSE events are silently skipped */
           }
         }
-      } finally {
-        reader.releaseLock();
-        setIsLoading(false);
       }
-    },
-    [],
-  );
+    } finally {
+      reader.releaseLock();
+      setIsLoading(false);
+    }
+  }, []);
 
   const handleSubmitDilemma = async () => {
     if (dilemmaInput.length < MIN_DILEMMA_LENGTH) return;
@@ -258,38 +219,26 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ dilemma: dilemmaInput, sessionId }),
       });
-
-      if (!response.ok) {
-        setIsLoading(false);
-        return;
-      }
-
+      if (!response.ok) { setIsLoading(false); return; }
       await consumeSSE(response);
     } catch {
       setIsLoading(false);
     }
   };
 
-  const handleIntervention = async (text: string) => {
+  const handleIntervention = async (text: string, end: boolean) => {
     if (!state.sessionId) return;
+
+    dispatch({ type: "USER_INTERVENED", round: state.currentRound, text });
     setIsLoading(true);
 
     try {
       const response = await fetch("/api/debate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "intervene",
-          sessionId: state.sessionId,
-          text,
-        }),
+        body: JSON.stringify({ action: "intervene", sessionId: state.sessionId, text, end }),
       });
-
-      if (!response.ok) {
-        setIsLoading(false);
-        return;
-      }
-
+      if (!response.ok) { setIsLoading(false); return; }
       await consumeSSE(response);
     } catch {
       setIsLoading(false);
@@ -298,10 +247,9 @@ export default function Home() {
 
   useEffect(() => {
     if (state.phase !== "summary" || !state.sessionId) return;
-
     let cancelled = false;
 
-    const fetchSummary = async () => {
+    (async () => {
       setIsLoading(true);
       try {
         const response = await fetch("/api/summary", {
@@ -309,49 +257,25 @@ export default function Home() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             sessionId: state.sessionId,
-            philosopherResponses: state.responses.filter(
-              (r) => r.status === "complete",
-            ),
+            philosopherResponses: state.responses.filter((r) => r.status === "complete"),
           }),
         });
-
-        if (cancelled) return;
-
-        if (!response.ok) {
-          setIsLoading(false);
-          return;
-        }
-
+        if (cancelled || !response.ok) { setIsLoading(false); return; }
         const data = await response.json();
         if (!cancelled) {
           dispatch({ type: "SET_SUMMARY", content: data.content ?? "" });
           setIsLoading(false);
         }
       } catch {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
+        if (!cancelled) setIsLoading(false);
       }
-    };
+    })();
 
-    fetchSummary();
-
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [state.phase, state.sessionId, state.responses]);
 
   const isSubmitDisabled = dilemmaInput.length < MIN_DILEMMA_LENGTH;
-
-  const showGrid =
-    state.phase === "round1" ||
-    state.phase === "pause-round1" ||
-    state.phase === "round2" ||
-    state.phase === "pause-round2" ||
-    state.phase === "round3" ||
-    state.phase === "user-intervention";
-
-  const showInput = state.phase === "idle";
+  const showGrid = state.phase === "debating" || state.phase === "user-intervention";
 
   return (
     <main className="flex min-h-full flex-col items-center px-4 py-8 md:px-6 md:py-10 lg:px-8 lg:py-12">
@@ -380,7 +304,7 @@ export default function Home() {
         </header>
 
         <AnimatePresence mode="wait">
-          {showInput && (
+          {state.phase === "idle" && (
             <motion.section
               key="input"
               initial={{ opacity: 0, y: 16 }}
@@ -430,7 +354,7 @@ export default function Home() {
             >
               {state.dilemma && (
                 <div className="mx-auto mb-6 max-w-2xl md:mb-8">
-                  <blockquote className="break-words rounded-lg border-l-4 border-accent bg-card p-4 font-serif text-base italic text-primary shadow-sm md:p-5 md:text-lg">
+                  <blockquote className="break-words rounded-lg border-l-4 border-accent bg-card p-4 font-serif text-base italic text-accent-light shadow-sm md:p-5 md:text-lg">
                     &ldquo;{state.dilemma}&rdquo;
                   </blockquote>
                 </div>
@@ -439,15 +363,15 @@ export default function Home() {
               <DebateGrid
                 philosophers={philosophers}
                 responses={state.responses}
+                currentRound={state.currentRound}
+                userInterventions={state.userInterventions}
               />
 
-              {(state.phase === "user-intervention") && (
+              {state.phase === "user-intervention" && (
                 <InterventionArea
-                  onSubmit={handleIntervention}
-                  onSkip={() => handleIntervention("")}
-                  round={
-                    state.responses.some((r) => r.round === 2) ? 2 : 1
-                  }
+                  onContinue={(text) => handleIntervention(text, false)}
+                  onEnd={(text) => handleIntervention(text, true)}
+                  round={state.currentRound}
                   disabled={isLoading}
                 />
               )}

@@ -9,27 +9,26 @@ import { PhilosopherCard } from "./PhilosopherCard";
 interface DebateGridProps {
   philosophers: PhilosopherConfig[];
   responses: PhilosopherResponse[];
+  currentRound: number;
+  userInterventions: Record<number, string>;
 }
 
-export function DebateGrid({ philosophers, responses }: DebateGridProps) {
+export function DebateGrid({ philosophers, responses, currentRound, userInterventions }: DebateGridProps) {
   return (
     <motion.div
       initial="hidden"
       animate="visible"
       variants={{
         hidden: {},
-        visible: {
-          transition: { staggerChildren: 0.08 },
-        },
+        visible: { transition: { staggerChildren: 0.08 } },
       }}
       className="grid grid-cols-1 items-stretch gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3"
       data-testid="debate-grid"
     >
       {philosophers.map((philosopher) => {
-        const response =
-          responses
-            .filter((r) => r.philosopherName === philosopher.name)
-            .sort((a, b) => b.round - a.round)[0] ?? null;
+        const philosopherResponses = responses.filter(
+          (r) => r.philosopherName === philosopher.name
+        );
 
         return (
           <motion.div
@@ -37,17 +36,14 @@ export function DebateGrid({ philosophers, responses }: DebateGridProps) {
             className="h-full"
             variants={{
               hidden: { opacity: 0, y: 24 },
-              visible: {
-                opacity: 1,
-                y: 0,
-                transition: { duration: 0.4, ease: "easeOut" },
-              },
+              visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
             }}
           >
             <PhilosopherCard
               philosopher={philosopher}
-              response={response}
-              isActive={response?.status === "streaming"}
+              responses={philosopherResponses}
+              currentRound={currentRound}
+              userInterventions={userInterventions}
             />
           </motion.div>
         );

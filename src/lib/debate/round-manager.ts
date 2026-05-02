@@ -41,11 +41,7 @@ async function* philosopherStream(
   round: number,
   prompt: string
 ): AsyncGenerator<DebateEvent> {
-  yield {
-    type: "philosopher-start",
-    philosopherName: philosopher.name,
-    round,
-  };
+  yield { type: "philosopher-start", philosopherName: philosopher.name, round };
   try {
     const result = await streamText({
       model: getPhilosopherModel(philosopher),
@@ -55,133 +51,118 @@ async function* philosopherStream(
     let content = "";
     for await (const chunk of result.textStream) {
       content += chunk;
-      yield {
-        type: "philosopher-chunk",
-        philosopherName: philosopher.name,
-        round,
-        chunk,
-      };
+      yield { type: "philosopher-chunk", philosopherName: philosopher.name, round, chunk };
     }
-    yield {
-      type: "philosopher-complete",
-      philosopherName: philosopher.name,
-      round,
-      content,
-    };
+    yield { type: "philosopher-complete", philosopherName: philosopher.name, round, content };
   } catch (error) {
-    yield {
-      type: "philosopher-error",
-      philosopherName: philosopher.name,
-      round,
-      error: String(error),
-    };
+    yield { type: "philosopher-error", philosopherName: philosopher.name, round, error: String(error) };
   }
 }
 
-function buildRound1Prompt(dilemma: string): string {
-  return dilemma;
-}
-
-function buildRound2Prompt(context: string): string {
-  return `Contexto do debate até agora:\n${context}\n\nCom base nesses argumentos, apresente sua réplica.`;
-}
-
-function buildRound2Prompt2(context: string, userInput: string): string {
-  const userPart = userInput.trim()
-    ? `\n\nO interlocutor interviu: "${userInput.trim()}"\n\nLevando isso em conta, apresente sua réplica.`
-    : `\n\nAprofunde sua posição em réplica aos demais.`;
-  return `Contexto do debate até agora:\n${context}${userPart}`;
-}
-
-function buildRound3Prompt(context: string, userInput: string): string {
-  const userPart = userInput.trim()
-    ? `\n\nIntervenção do interlocutor:\n"${userInput.trim()}"\n\nReaja à intervenção e aos argumentos anteriores.`
-    : `\n\nConclua sua posição com base em tudo que foi dito.`;
-  return `Contexto do debate até agora:\n${context}${userPart}`;
-}
-
-function buildContextFromResponses(
-  responses: Map<string, string>
+function buildPrompt(
+  dilemma: string,
+  allResponses: Map<number, Map<string, string>>,
+  userInterventions: Map<number, string>,
+  round: number
 ): string {
-  const lines: string[] = [];
-  for (const [name, content] of responses) {
-    lines.push(`${name}: ${content}`);
+  if (round === 1) return dilemma;
+
+  const lines: string[] = [`Dilema em debate: ${dilemma}\n`];
+
+  for (let r = 1; r < round; r++) {
+    const roundResponses = allResponses.get(r);
+    if (roundResponses) {
+      lines.push(`--- Round ${r} ---`);
+      for (const [name, content] of roundResponses) {
+        lines.push(`${name}: ${content}`);
+      }
+    }
+    const userText = userInterventions.get(r);
+    if (userText?.trim()) {
+      lines.push(`\nInterlocutor: "${userText.trim()}"`);
+    }
+    lines.push("");
   }
-  return lines.join("\n\n");
+
+  const userText = userInterventions.get(round - 1);
+  const userPart = userText?.trim()
+    ? `O interlocutor disse: "${userText.trim()}". Leve isso em conta ao responder.`
+    : `Aprofunde sua posição em réplica aos demais.`;
+
+  lines.push(`Com base em tudo acima: ${userPart}`);
+  return lines.join("\n");
 }
+
+// Yielded value is { end: boolean; text: string }
+type UserInput = { end: boolean; text: string };
 
 export async function* debateOrchestrator(
   dilemma: string,
   philosophers: PhilosopherConfig[],
-  sessionId: string
-): AsyncGenerator<DebateEvent> {
+  _sessionId: string
+): AsyncGenerator<DebateEvent, void, UserInput | undefined> {
   if (!dilemma || dilemma.trim().length === 0) {
     throw new Error("Dilemma cannot be empty");
   }
 
-  const round1Prompt = buildRound1Prompt(dilemma);
-  const round1Streams = philosophers.map((p) =>
-    philosopherStream(p, 1, round1Prompt)
-  );
+  // allResponses[round] = Map<philosopherName, content>
+  const allResponses = new Map<number, Map<string, string>>();
+  const userInterventions = new Map<number, string>();
 
-  const round1Responses = new Map<string, string>();
+  let round = 1;
 
-  for await (const event of mergeAsyncIterables(round1Streams)) {
-    yield event;
-    if (event.type === "philosopher-complete") {
-      round1Responses.set(event.philosopherName, event.content);
-    }
-  }
+  while (true) {
+    const roundResponses = new Map<string, string>();
+    allResponses.set(round, roundResponses);
 
-  yield { type: "round-complete", round: 1 };
+    const prompt = buildPrompt(dilemma, allResponses, userInterventions, round);
 
-  // Pause after round 1 — user may intervene or skip
-  const userInput1 = yield { type: "user-intervention" };
-  const userText1 = typeof userInput1 === "string" ? userInput1 : "";
+    if (round === 1) {
+      // Round 1: all philosophers speak in parallel
+      const streams = philosophers.map((p) => philosopherStream(p, round, prompt));
+      for await (const event of mergeAsyncIterables(streams)) {
+        yield event;
+        if (event.type === "philosopher-complete") {
+          roundResponses.set(event.philosopherName, event.content);
+        }
+      }
+    } else {
+      // Subsequent rounds: sequential, AI-selected order
+      const remaining = [...philosophers];
+      while (remaining.length > 0) {
+        const context = [...roundResponses.entries()]
+          .map(([n, c]) => `${n}: ${c}`)
+          .join("\n\n");
+        const next = await selectNextSpeaker(context || prompt, remaining);
+        const idx = remaining.findIndex((p) => p.id === next.id);
+        if (idx !== -1) remaining.splice(idx, 1);
 
-  let context = buildContextFromResponses(round1Responses);
-  const remaining = [...philosophers];
-  const round2Responses = new Map<string, string>();
-
-  while (remaining.length > 0) {
-    const next = await selectNextSpeaker(context, remaining);
-    const idx = remaining.findIndex((p) => p.id === next.id);
-    if (idx !== -1) remaining.splice(idx, 1);
-
-    const stream = philosopherStream(next, 2, buildRound2Prompt2(context, userText1));
-    let responseContent = "";
-
-    for await (const event of stream) {
-      yield event;
-      if (event.type === "philosopher-complete") {
-        responseContent = event.content;
+        const stream = philosopherStream(next, round, prompt);
+        for await (const event of stream) {
+          yield event;
+          if (event.type === "philosopher-complete") {
+            roundResponses.set(event.philosopherName, event.content);
+          }
+        }
       }
     }
 
-    round2Responses.set(next.name, responseContent);
-    context = buildContextFromResponses(
-      new Map([...round1Responses, ...round2Responses])
-    );
+    yield { type: "round-complete", round };
+
+    // Pause and ask user what to do
+    const userInput = yield { type: "user-intervention" };
+    const text = userInput?.text ?? "";
+    const end = userInput?.end ?? false;
+
+    if (text.trim()) {
+      userInterventions.set(round, text);
+    }
+
+    if (end) {
+      yield { type: "debate-complete", summary: "" };
+      return;
+    }
+
+    round++;
   }
-
-  yield { type: "round-complete", round: 2 };
-
-  // Pause after round 2 — user may intervene or skip
-  const userInput2 = yield { type: "user-intervention" };
-  const userText2 = typeof userInput2 === "string" ? userInput2 : "";
-
-  const fullContext = buildContextFromResponses(
-    new Map([...round1Responses, ...round2Responses])
-  );
-  const round3Prompt = buildRound3Prompt(fullContext, userText2);
-  const round3Streams = philosophers.map((p) =>
-    philosopherStream(p, 3, round3Prompt)
-  );
-
-  for await (const event of mergeAsyncIterables(round3Streams)) {
-    yield event;
-  }
-
-  yield { type: "round-complete", round: 3 };
-  yield { type: "debate-complete", summary: "" };
 }

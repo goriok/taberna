@@ -172,18 +172,12 @@ async function handleInitial(body: unknown, request: NextRequest) {
 
 async function handleIntervention(body: Record<string, unknown>) {
   const sessionId = body.sessionId;
-  const text = body.text;
+  const text = typeof body.text === "string" ? body.text : "";
+  const end = body.end === true;
 
   if (typeof sessionId !== "string" || !sessionId) {
     return NextResponse.json(
       { error: "sessionId é obrigatório" },
-      { status: 400 },
-    );
-  }
-
-  if (typeof text !== "string") {
-    return NextResponse.json(
-      { error: "text deve ser uma string" },
       { status: 400 },
     );
   }
@@ -199,7 +193,7 @@ async function handleIntervention(body: Record<string, unknown>) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        let result = await generator.next(text);
+        let result = await generator.next({ text, end });
 
         while (!result.done) {
           const event = result.value;

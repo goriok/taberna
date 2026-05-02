@@ -2,12 +2,8 @@ import { z } from "zod";
 
 export const DEBATE_PHASES = [
   "idle",
-  "round1",
-  "pause-round1",
-  "round2",
-  "pause-round2",
+  "debating",
   "user-intervention",
-  "round3",
   "summary",
   "complete",
 ] as const;
@@ -28,6 +24,9 @@ export interface PhilosopherResponse {
 export interface DebateState {
   phase: DebatePhase;
   responses: PhilosopherResponse[];
+  /** user text keyed by the round after which they intervened */
+  userInterventions: Record<number, string>;
+  currentRound: number;
   summary: string | null;
   dilemma: string;
   sessionId: string;
