@@ -16,6 +16,7 @@ import { baudrillard } from "./baudrillard";
 import { beauvoir } from "./beauvoir";
 import { davis } from "./davis";
 import { federici } from "./federici";
+import { marx } from "./marx";
 
 export const philosophers: PhilosopherConfig[] = [
   heidegger,
@@ -35,6 +36,7 @@ export const philosophers: PhilosopherConfig[] = [
   beauvoir,
   davis,
   federici,
+  marx,
 ];
 
 export { heidegger } from "./heidegger";
@@ -54,3 +56,4 @@ export { baudrillard } from "./baudrillard";
 export { beauvoir } from "./beauvoir";
 export { davis } from "./davis";
 export { federici } from "./federici";
+export { marx } from "./marx";

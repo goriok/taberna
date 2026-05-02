@@ -164,6 +164,10 @@ const TABLE_PHRASES: Record<string, { left: string; joined: string }> = {
     left: "Federici se levanta — vai ver quem está fazendo o trabalho invisível que torna esta conversa possível.",
     joined: "Federici retorna com o arquivo. O que estava escondido em plena vista ainda precisa ser nomeado.",
   },
+  marx: {
+    left: "Marx se retira — há condições materiais a investigar antes de voltar a falar.",
+    joined: "Marx retorna. A mercadoria ainda encobre a relação social. Vamos dissecar.",
+  },
 };
 
 const DEFAULT_PHRASES = {
