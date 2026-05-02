@@ -184,6 +184,10 @@ const TABLE_PHRASES: Record<string, { left: string; joined: string }> = {
     left: "Matias Aires recolhe o copo com a calma de quem já encontrou o que procurava — e o que procurava estava em todos.",
     joined: "Matias Aires retorna. A vaidade continuou trabalhando na ausência dele, como era de se esperar.",
   },
+  kierkegaard: {
+    left: "Kierkegaard se recolhe na interioridade — a pergunta que deixou na mesa vai trabalhar sozinha.",
+    joined: "Kierkegaard volta com uma pergunta, não uma resposta. De qual estágio você estava falando?",
+  },
 };
 
 const DEFAULT_PHRASES = {
