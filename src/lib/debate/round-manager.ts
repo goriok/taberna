@@ -124,6 +124,18 @@ const TABLE_PHRASES: Record<string, { left: string; joined: string }> = {
     left: "Sennett se levanta — vai observar a cidade lá fora, diz ele.",
     joined: "Sennett retorna, com histórias de quem encontrou pelo caminho.",
   },
+  "moufawad-paul": {
+    left: "Moufawad-Paul sai sem cerimônia — há organização a fazer além desta mesa.",
+    joined: "Moufawad-Paul volta. A linha de massas o trouxe de volta ao concreto.",
+  },
+  "minqi-li": {
+    left: "Minqi Li se retira em silêncio, com a calma de quem já calculou o que vem a seguir.",
+    joined: "Minqi Li retorna. As ondas Kondratiev ainda rodam, e ele tem dados.",
+  },
+  "wang-hui": {
+    left: "Wang Hui parte — mas leva a longa duração consigo.",
+    joined: "Wang Hui reaparece. A formação histórica ainda não foi rastreada até o fim.",
+  },
 };
 
 const DEFAULT_PHRASES = {
