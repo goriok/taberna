@@ -11,9 +11,10 @@ interface DebateGridProps {
   responses: PhilosopherResponse[];
   currentRound: number;
   userInterventions: Record<number, string>;
+  isWaiting?: boolean;
 }
 
-export function DebateGrid({ philosophers, responses, currentRound, userInterventions }: DebateGridProps) {
+export function DebateGrid({ philosophers, responses, currentRound, userInterventions, isWaiting }: DebateGridProps) {
   return (
     <motion.div
       initial="hidden"
@@ -44,6 +45,7 @@ export function DebateGrid({ philosophers, responses, currentRound, userInterven
               responses={philosopherResponses}
               currentRound={currentRound}
               userInterventions={userInterventions}
+              isWaiting={isWaiting}
             />
           </motion.div>
         );

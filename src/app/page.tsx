@@ -365,6 +365,7 @@ export default function Home() {
                 responses={state.responses}
                 currentRound={state.currentRound}
                 userInterventions={state.userInterventions}
+                isWaiting={isLoading && state.phase === "debating"}
               />
 
               {state.phase === "user-intervention" && (

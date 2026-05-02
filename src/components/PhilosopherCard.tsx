@@ -10,6 +10,7 @@ interface PhilosopherCardProps {
   responses: PhilosopherResponse[];
   currentRound: number;
   userInterventions: Record<number, string>;
+  isWaiting?: boolean;
 }
 
 function renderMarkdown(text: string): React.ReactNode[] {
@@ -113,6 +114,7 @@ export function PhilosopherCard({
   responses,
   currentRound,
   userInterventions,
+  isWaiting = false,
 }: PhilosopherCardProps) {
   const isDisabled = philosopher.enabled === false;
   const avatarLetter = philosopher.name.charAt(0).toUpperCase();
@@ -121,10 +123,11 @@ export function PhilosopherCard({
   const status = currentResponse?.status ?? null;
 
   const isStreaming = status === "streaming";
+  const showTyping = isWaiting && status === null;
 
   const borderClass = isDisabled
     ? "border-card-border opacity-40 grayscale"
-    : isStreaming
+    : isStreaming || showTyping
       ? "border-amber"
       : "border-accent";
 
@@ -176,7 +179,28 @@ export function PhilosopherCard({
 
       {/* Current round */}
       <AnimatePresence mode="wait">
-        {status === null && !latestCompleted && (
+        {showTyping && (
+          <motion.div
+            key="typing"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex flex-1 items-center justify-center py-6"
+          >
+            <span className="flex items-center gap-1">
+              {[0, 1, 2].map((i) => (
+                <span
+                  key={i}
+                  className="inline-block h-1.5 w-1.5 rounded-full bg-amber"
+                  style={{ animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }}
+                />
+              ))}
+            </span>
+          </motion.div>
+        )}
+
+        {status === null && !latestCompleted && !showTyping && (
           <motion.div
             key="idle"
             initial={{ opacity: 0 }}
