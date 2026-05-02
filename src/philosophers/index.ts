@@ -22,6 +22,9 @@ import { pauloFreire } from "./paulo-freire";
 import { marilenaChau } from "./marilena-chaui";
 import { matiasAires } from "./matias-aires";
 import { kierkegaard } from "./kierkegaard";
+import { socrates } from "./socrates";
+import { platao } from "./platao";
+import { aristoteles } from "./aristoteles";
 
 export const philosophers: PhilosopherConfig[] = [
   heidegger,
@@ -47,6 +50,9 @@ export const philosophers: PhilosopherConfig[] = [
   marilenaChau,
   matiasAires,
   kierkegaard,
+  socrates,
+  platao,
+  aristoteles,
 ];
 
 export { heidegger } from "./heidegger";
@@ -72,3 +78,6 @@ export { pauloFreire } from "./paulo-freire";
 export { marilenaChau } from "./marilena-chaui";
 export { matiasAires } from "./matias-aires";
 export { kierkegaard } from "./kierkegaard";
+export { socrates } from "./socrates";
+export { platao } from "./platao";
+export { aristoteles } from "./aristoteles";

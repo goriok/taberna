@@ -188,6 +188,18 @@ const TABLE_PHRASES: Record<string, { left: string; joined: string }> = {
     left: "Kierkegaard se recolhe na interioridade — a pergunta que deixou na mesa vai trabalhar sozinha.",
     joined: "Kierkegaard volta com uma pergunta, não uma resposta. De qual estágio você estava falando?",
   },
+  socrates: {
+    left: "Sócrates se levanta — o daimon avisou que era hora de ir. Mas a pergunta fica na mesa.",
+    joined: "Sócrates retorna com o mesmo ar de quem não sabe nada. O que é exatamente isso que estávamos discutindo?",
+  },
+  platao: {
+    left: "Platão se retira em direção à luz — a Academia espera, e há Formas que ainda precisam ser contempladas.",
+    joined: "Platão desce de volta à caverna. Traz uma pergunta do mundo inteligível: isto que discutíamos era a coisa em si ou a sombra dela?",
+  },
+  aristoteles: {
+    left: "Aristóteles se levanta — há casos particulares lá fora que ainda precisam ser observados e classificados.",
+    joined: "Aristóteles retorna com novas distinções a fazer. Amicus Plato — mas o real estava aqui o tempo todo.",
+  },
 };
 
 const DEFAULT_PHRASES = {
