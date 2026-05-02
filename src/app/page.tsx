@@ -12,6 +12,7 @@ import { SummaryDisplay } from "@/components/SummaryDisplay";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const MIN_DILEMMA_LENGTH = 10;
+const SESSION_KEY = "taberna-session";
 
 const initialState: DebateState = {
   phase: "idle",
@@ -22,6 +23,63 @@ const initialState: DebateState = {
   dilemma: "",
   sessionId: "",
 };
+
+function loadPersistedState(): DebateState {
+  if (typeof window === "undefined") return initialState;
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return initialState;
+    const saved = JSON.parse(raw) as Partial<DebateState>;
+
+    // Only restore completed responses — drop any streaming/partial ones
+    const responses = (saved.responses ?? []).filter(
+      (r) => r.status === "complete"
+    );
+
+    // Sanitize phase:
+    // - complete with summary → restore as complete
+    // - debating/user-intervention with responses → restore as user-intervention so user can continue or end
+    // - anything else → idle
+    let phase: DebateState["phase"] = "idle";
+    if (saved.phase === "complete" && saved.summary) {
+      phase = "complete";
+    } else if (
+      (saved.phase === "debating" || saved.phase === "user-intervention") &&
+      responses.length > 0
+    ) {
+      phase = "user-intervention";
+    }
+
+    if (phase === "idle") return initialState;
+
+    return {
+      phase,
+      responses,
+      userInterventions: saved.userInterventions ?? {},
+      currentRound: saved.currentRound ?? 1,
+      summary: saved.summary ?? null,
+      dilemma: saved.dilemma ?? "",
+      sessionId: saved.sessionId ?? "",
+    };
+  } catch {
+    return initialState;
+  }
+}
+
+function persistState(state: DebateState) {
+  try {
+    // Don't persist transient streaming state — only complete responses
+    const toSave: DebateState = {
+      ...state,
+      responses: state.responses.filter((r) => r.status === "complete"),
+    };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(toSave));
+  } catch { /* ignore */ }
+}
+
+function clearPersistedState() {
+  try { localStorage.removeItem(SESSION_KEY); } catch { /* ignore */ }
+}
 
 type Action =
   | { type: "SUBMIT_DILEMMA"; dilemma: string; sessionId: string }
@@ -138,8 +196,16 @@ function generateSessionId(): string {
 }
 
 export default function Home() {
-  const [state, dispatch] = useReducer(debateReducer, initialState);
-  const [dilemmaInput, setDilemmaInput] = useState("");
+  const [state, dispatch] = useReducer(debateReducer, undefined, loadPersistedState);
+  const [dilemmaInput, setDilemmaInput] = useState(() => {
+    if (typeof window === "undefined") return "";
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      if (!raw) return "";
+      const saved = JSON.parse(raw) as Partial<DebateState>;
+      return saved.dilemma ?? "";
+    } catch { return ""; }
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => {
     if (typeof window === "undefined") return new Set(philosophers.map((p) => p.id));
@@ -160,6 +226,15 @@ export default function Home() {
   };
 
   const activePhilosophers = philosophers.filter((p) => selectedIds.has(p.id));
+
+  // Persist state on every change (skip idle — nothing to restore)
+  useEffect(() => {
+    if (state.phase === "idle") {
+      clearPersistedState();
+    } else {
+      persistState(state);
+    }
+  }, [state]);
 
   const consumeSSE = useCallback(async (response: Response) => {
     const reader = response.body?.getReader();
@@ -301,7 +376,20 @@ export default function Home() {
     <main className="flex min-h-full flex-col items-center px-4 py-8 md:px-6 md:py-10 lg:px-8 lg:py-12">
       <div className="w-full max-w-5xl">
         <header className="relative mb-8 text-center md:mb-10">
-          <div className="absolute right-0 top-0">
+          <div className="absolute right-0 top-0 flex items-center gap-3">
+            {state.phase !== "idle" && !isLoading && (
+              <button
+                type="button"
+                onClick={() => {
+                  setDilemmaInput("");
+                  clearPersistedState();
+                  dispatch({ type: "RESET" });
+                }}
+                className="font-sans text-xs text-text/30 transition-colors hover:text-burgundy"
+              >
+                Nova sessão
+              </button>
+            )}
             <ThemeToggle />
           </div>
           <motion.h1
@@ -416,6 +504,7 @@ export default function Home() {
                 summary={state.summary}
                 onReset={() => {
                   setDilemmaInput("");
+                  clearPersistedState();
                   dispatch({ type: "RESET" });
                 }}
               />
