@@ -152,6 +152,18 @@ const TABLE_PHRASES: Record<string, { left: string; joined: string }> = {
     left: "Baudrillard desaparece — ou era já um simulacro que se dissolveu.",
     joined: "Baudrillard reaparece. O real ainda não foi completamente substituído. Ou foi?",
   },
+  beauvoir: {
+    left: "Beauvoir se retira — há uma situação concreta que precisa ser investigada lá fora.",
+    joined: "Beauvoir retorna. A situação mudou, e com ela o que é possível.",
+  },
+  davis: {
+    left: "Davis parte. A luta não espera pela conversa — mas a conversa também é luta.",
+    joined: "Davis está de volta. A genealogia ainda não foi rastreada até o fim.",
+  },
+  federici: {
+    left: "Federici se levanta — vai ver quem está fazendo o trabalho invisível que torna esta conversa possível.",
+    joined: "Federici retorna com o arquivo. O que estava escondido em plena vista ainda precisa ser nomeado.",
+  },
 };
 
 const DEFAULT_PHRASES = {

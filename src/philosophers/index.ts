@@ -13,6 +13,9 @@ import { sartre } from "./sartre";
 import { mao } from "./mao";
 import { marcuse } from "./marcuse";
 import { baudrillard } from "./baudrillard";
+import { beauvoir } from "./beauvoir";
+import { davis } from "./davis";
+import { federici } from "./federici";
 
 export const philosophers: PhilosopherConfig[] = [
   heidegger,
@@ -29,6 +32,9 @@ export const philosophers: PhilosopherConfig[] = [
   mao,
   marcuse,
   baudrillard,
+  beauvoir,
+  davis,
+  federici,
 ];
 
 export { heidegger } from "./heidegger";
@@ -45,3 +51,6 @@ export { sartre } from "./sartre";
 export { mao } from "./mao";
 export { marcuse } from "./marcuse";
 export { baudrillard } from "./baudrillard";
+export { beauvoir } from "./beauvoir";
+export { davis } from "./davis";
+export { federici } from "./federici";
