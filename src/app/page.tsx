@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useReducer, useState } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { DebateState, PhilosopherResponse, TableEvent } from "@/types/debate";
 import { philosophers } from "@/philosophers";
@@ -422,6 +423,12 @@ export default function Home() {
                 Nova sessão
               </button>
             )}
+            <Link
+              href="/filosofos"
+              className="font-sans text-xs text-text/30 transition-colors hover:text-accent"
+            >
+              Os convidados
+            </Link>
             <ThemeToggle />
           </div>
           <motion.h1
