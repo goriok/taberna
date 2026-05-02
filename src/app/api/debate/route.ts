@@ -68,12 +68,9 @@ async function handleInitial(body: unknown, request: NextRequest) {
   const validation = DebateRequestSchema.safeParse(body);
   if (!validation.success) {
     const issue = validation.error.issues[0];
-    let message = "Dados inválidos";
-    if (issue?.code === "too_small") {
-      message = "O dilema deve ter pelo menos 10 caracteres";
-    } else if (issue?.code === "too_big") {
-      message = "Dilema muito longo. Resuma em até 500 caracteres.";
-    }
+    const message = issue?.code === "too_small"
+      ? "O dilema deve ter pelo menos 10 caracteres"
+      : "Dados inválidos";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
@@ -184,9 +181,9 @@ async function handleIntervention(body: Record<string, unknown>) {
     );
   }
 
-  if (typeof text !== "string" || text.trim().length === 0) {
+  if (typeof text !== "string") {
     return NextResponse.json(
-      { error: "Texto de intervenção é obrigatório" },
+      { error: "text deve ser uma string" },
       { status: 400 },
     );
   }
@@ -206,6 +203,13 @@ async function handleIntervention(body: Record<string, unknown>) {
 
         while (!result.done) {
           const event = result.value;
+
+          if (event.type === "user-intervention") {
+            sendSSE(controller, { type: "waiting-for-user" });
+            controller.close();
+            return;
+          }
+
           sendSSE(controller, event);
 
           if (event.type === "philosopher-complete") {

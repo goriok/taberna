@@ -120,8 +120,9 @@ function debateReducer(state: DebateState, action: Action): DebateState {
     }
 
     case "ROUND_COMPLETE": {
-      const nextPhase = action.round === 1 ? "round2" : state.phase;
-      return { ...state, phase: nextPhase };
+      if (action.round === 1) return { ...state, phase: "round2" };
+      if (action.round === 2) return { ...state, phase: "round3" };
+      return state;
     }
 
     case "WAITING_FOR_USER":
@@ -155,7 +156,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
 
   const consumeSSE = useCallback(
-    async (response: Response, isIntervention: boolean) => {
+    async (response: Response) => {
       const reader = response.body?.getReader();
       if (!reader) {
         setIsLoading(false);
@@ -164,12 +165,13 @@ export default function Home() {
 
       const decoder = new TextDecoder();
       let buffer = "";
+      let pausedForUser = false;
 
       try {
         while (true) {
           const { done, value } = await reader.read();
           if (done) {
-            if (isIntervention) {
+            if (!pausedForUser) {
               dispatch({ type: "DEBATE_COMPLETE" });
             }
             break;
@@ -223,6 +225,7 @@ export default function Home() {
                   dispatch({ type: "ROUND_COMPLETE", round: parsed.round });
                   break;
                 case "waiting-for-user":
+                  pausedForUser = true;
                   dispatch({ type: "WAITING_FOR_USER" });
                   break;
                 case "debate-complete":
@@ -261,14 +264,14 @@ export default function Home() {
         return;
       }
 
-      await consumeSSE(response, false);
+      await consumeSSE(response);
     } catch {
       setIsLoading(false);
     }
   };
 
   const handleIntervention = async (text: string) => {
-    if (!state.sessionId || text.trim().length === 0) return;
+    if (!state.sessionId) return;
     setIsLoading(true);
 
     try {
@@ -287,7 +290,7 @@ export default function Home() {
         return;
       }
 
-      await consumeSSE(response, true);
+      await consumeSSE(response);
     } catch {
       setIsLoading(false);
     }
@@ -342,7 +345,9 @@ export default function Home() {
 
   const showGrid =
     state.phase === "round1" ||
+    state.phase === "pause-round1" ||
     state.phase === "round2" ||
+    state.phase === "pause-round2" ||
     state.phase === "round3" ||
     state.phase === "user-intervention";
 
@@ -436,9 +441,13 @@ export default function Home() {
                 responses={state.responses}
               />
 
-              {state.phase === "user-intervention" && (
+              {(state.phase === "user-intervention") && (
                 <InterventionArea
                   onSubmit={handleIntervention}
+                  onSkip={() => handleIntervention("")}
+                  round={
+                    state.responses.some((r) => r.round === 2) ? 2 : 1
+                  }
                   disabled={isLoading}
                 />
               )}

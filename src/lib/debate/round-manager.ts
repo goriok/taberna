@@ -1,6 +1,7 @@
 import type { DebateEvent } from "@/types/debate";
 import type { PhilosopherConfig } from "@/types/philosopher";
 import { streamText } from "ai";
+import { getPhilosopherModel } from "@/lib/llm/provider";
 import { selectNextSpeaker } from "./ai-selector";
 
 async function* mergeAsyncIterables<T>(
@@ -47,7 +48,7 @@ async function* philosopherStream(
   };
   try {
     const result = await streamText({
-      model: philosopher.model,
+      model: getPhilosopherModel(philosopher),
       system: philosopher.systemPrompt,
       prompt,
     });
@@ -85,8 +86,18 @@ function buildRound2Prompt(context: string): string {
   return `Contexto do debate até agora:\n${context}\n\nCom base nesses argumentos, apresente sua réplica.`;
 }
 
+function buildRound2Prompt2(context: string, userInput: string): string {
+  const userPart = userInput.trim()
+    ? `\n\nO interlocutor interviu: "${userInput.trim()}"\n\nLevando isso em conta, apresente sua réplica.`
+    : `\n\nAprofunde sua posição em réplica aos demais.`;
+  return `Contexto do debate até agora:\n${context}${userPart}`;
+}
+
 function buildRound3Prompt(context: string, userInput: string): string {
-  return `Contexto do debate até agora:\n${context}\n\nIntervenção do usuário:\n${userInput}\n\nReaja à intervenção do usuário e aos argumentos anteriores.`;
+  const userPart = userInput.trim()
+    ? `\n\nIntervenção do interlocutor:\n"${userInput.trim()}"\n\nReaja à intervenção e aos argumentos anteriores.`
+    : `\n\nConclua sua posição com base em tudo que foi dito.`;
+  return `Contexto do debate até agora:\n${context}${userPart}`;
 }
 
 function buildContextFromResponses(
@@ -124,6 +135,10 @@ export async function* debateOrchestrator(
 
   yield { type: "round-complete", round: 1 };
 
+  // Pause after round 1 — user may intervene or skip
+  const userInput1 = yield { type: "user-intervention" };
+  const userText1 = typeof userInput1 === "string" ? userInput1 : "";
+
   let context = buildContextFromResponses(round1Responses);
   const remaining = [...philosophers];
   const round2Responses = new Map<string, string>();
@@ -133,7 +148,7 @@ export async function* debateOrchestrator(
     const idx = remaining.findIndex((p) => p.id === next.id);
     if (idx !== -1) remaining.splice(idx, 1);
 
-    const stream = philosopherStream(next, 2, buildRound2Prompt(context));
+    const stream = philosopherStream(next, 2, buildRound2Prompt2(context, userText1));
     let responseContent = "";
 
     for await (const event of stream) {
@@ -151,13 +166,14 @@ export async function* debateOrchestrator(
 
   yield { type: "round-complete", round: 2 };
 
-  const userInput = yield { type: "user-intervention" };
-  const userInterventionText = typeof userInput === "string" ? userInput : "";
+  // Pause after round 2 — user may intervene or skip
+  const userInput2 = yield { type: "user-intervention" };
+  const userText2 = typeof userInput2 === "string" ? userInput2 : "";
 
   const fullContext = buildContextFromResponses(
     new Map([...round1Responses, ...round2Responses])
   );
-  const round3Prompt = buildRound3Prompt(fullContext, userInterventionText);
+  const round3Prompt = buildRound3Prompt(fullContext, userText2);
   const round3Streams = philosophers.map((p) =>
     philosopherStream(p, 3, round3Prompt)
   );

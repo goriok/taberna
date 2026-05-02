@@ -3,7 +3,9 @@ import { z } from "zod";
 export const DEBATE_PHASES = [
   "idle",
   "round1",
+  "pause-round1",
   "round2",
+  "pause-round2",
   "user-intervention",
   "round3",
   "summary",
@@ -32,7 +34,7 @@ export interface DebateState {
 }
 
 export const DebateRequestSchema = z.object({
-  dilemma: z.string().min(10).max(500),
+  dilemma: z.string().min(10),
   sessionId: z.string().uuid().optional(),
 });
 

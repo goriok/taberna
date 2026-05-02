@@ -6,10 +6,12 @@ import { DecorativeDivider } from "./DecorativeDivider";
 
 interface InterventionAreaProps {
   onSubmit: (text: string) => void;
+  onSkip: () => void;
+  round: number;
   disabled?: boolean;
 }
 
-export function InterventionArea({ onSubmit, disabled }: InterventionAreaProps) {
+export function InterventionArea({ onSubmit, onSkip, round, disabled }: InterventionAreaProps) {
   const [text, setText] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -33,7 +35,9 @@ export function InterventionArea({ onSubmit, disabled }: InterventionAreaProps) 
         Sua vez de falar
       </h3>
       <p className="mb-4 text-center font-sans text-sm text-text/70">
-        Os filósofos aguardam sua contribuição para a última rodada.
+        {round === 1
+          ? "Após a primeira rodada — quer dizer algo antes que continuem?"
+          : "Última chance antes do round final. Intervenha ou deixe os filósofos concluírem."}
       </p>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -45,13 +49,23 @@ export function InterventionArea({ onSubmit, disabled }: InterventionAreaProps) 
           disabled={disabled}
           className="w-full resize-none rounded-md border border-card-border bg-card p-4 font-sans text-base leading-relaxed text-text shadow-sm outline-none transition-colors placeholder:text-text/30 focus:border-accent focus:shadow-gold disabled:opacity-60"
         />
-        <button
-          type="submit"
-          disabled={disabled || text.trim().length === 0}
-          className="btn-cta min-h-[44px] w-full rounded-md px-6 py-3 font-sans text-sm md:w-auto md:self-end"
-        >
-          {disabled ? "Enviando..." : "Intervir no Debate"}
-        </button>
+        <div className="flex flex-col gap-3 md:flex-row md:justify-end">
+          <button
+            type="button"
+            onClick={onSkip}
+            disabled={disabled}
+            className="min-h-[44px] rounded-md border border-card-border px-6 py-3 font-sans text-sm font-semibold text-text/60 transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Deixar continuar
+          </button>
+          <button
+            type="submit"
+            disabled={disabled || text.trim().length === 0}
+            className="btn-cta min-h-[44px] rounded-md px-6 py-3 font-sans text-sm"
+          >
+            {disabled ? "Enviando..." : "Intervir no Debate"}
+          </button>
+        </div>
       </form>
     </motion.div>
   );
