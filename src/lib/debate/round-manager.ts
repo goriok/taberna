@@ -168,6 +168,22 @@ const TABLE_PHRASES: Record<string, { left: string; joined: string }> = {
     left: "Marx se retira — há condições materiais a investigar antes de voltar a falar.",
     joined: "Marx retorna. A mercadoria ainda encobre a relação social. Vamos dissecar.",
   },
+  "lelia-gonzalez": {
+    left: "Lélia se levanta com o sorriso de quem já nomeou o que estava sem nome, e sai.",
+    joined: "Lélia volta à mesa. O pretuguês e a amefricanidade ainda têm muito a revelar.",
+  },
+  "paulo-freire": {
+    left: "Freire se retira — mas deixa a pergunta no ar, como quem sabe que ela vai trabalhar sozinha.",
+    joined: "Freire retorna. Há inéditos viáveis que ainda precisam ser nomeados.",
+  },
+  "marilena-chaui": {
+    left: "Chauí se retira — a ideologia não para de trabalhar enquanto ninguém olha.",
+    joined: "Chauí está de volta. Há mais uma parcialidade se passando por universal aqui.",
+  },
+  "matias-aires": {
+    left: "Matias Aires recolhe o copo com a calma de quem já encontrou o que procurava — e o que procurava estava em todos.",
+    joined: "Matias Aires retorna. A vaidade continuou trabalhando na ausência dele, como era de se esperar.",
+  },
 };
 
 const DEFAULT_PHRASES = {

@@ -166,7 +166,7 @@ export default function FilosofosPage() {
           }}
           className="flex flex-col gap-3"
         >
-          {philosophers.map((philosopher) => (
+          {[...philosophers].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")).map((philosopher) => (
             <motion.div
               key={philosopher.id}
               variants={{

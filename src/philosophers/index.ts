@@ -17,6 +17,10 @@ import { beauvoir } from "./beauvoir";
 import { davis } from "./davis";
 import { federici } from "./federici";
 import { marx } from "./marx";
+import { leliaGonzalez } from "./lelia-gonzalez";
+import { pauloFreire } from "./paulo-freire";
+import { marilenaChau } from "./marilena-chaui";
+import { matiasAires } from "./matias-aires";
 
 export const philosophers: PhilosopherConfig[] = [
   heidegger,
@@ -37,6 +41,10 @@ export const philosophers: PhilosopherConfig[] = [
   davis,
   federici,
   marx,
+  leliaGonzalez,
+  pauloFreire,
+  marilenaChau,
+  matiasAires,
 ];
 
 export { heidegger } from "./heidegger";
@@ -57,3 +65,7 @@ export { beauvoir } from "./beauvoir";
 export { davis } from "./davis";
 export { federici } from "./federici";
 export { marx } from "./marx";
+export { leliaGonzalez } from "./lelia-gonzalez";
+export { pauloFreire } from "./paulo-freire";
+export { marilenaChau } from "./marilena-chaui";
+export { matiasAires } from "./matias-aires";
