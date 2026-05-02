@@ -1,0 +1,17 @@
+
+ RUN  v4.1.5 /Users/goriok/sources/taberna
+
+
+ Test Files  16 passed (16)
+      Tests  133 passed (133)
+   Start at  02:05:32
+   Duration  4.08s (transform 1.61s, setup 1.15s, import 4.07s, tests 3.32s, environment 13.02s)
+
+---BUILD---
+⨯ Another next build process is already running.
+
+  This could be:
+  - A next build still in progress
+  - A previous build that didn't exit cleanly
+
+  Suggestion: Wait for the build to complete.

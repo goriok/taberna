@@ -1,0 +1,169 @@
+version: "3"
+
+dotenv: [".env"]
+
+vars:
+  APP: taberna
+  APP_DIR: "{{.ROOT_DIR}}"
+  REGISTRY: "localhost:5000"
+  IMAGE: "{{.REGISTRY}}/{{.APP}}:latest"
+  REMOTE_BUILD_DIR: "/tmp/build-{{.APP}}"
+
+tasks:
+  default:
+    desc: "List all available tasks"
+    silent: true
+    cmds:
+      - task --list
+
+  # =========================================================================
+  # DESENVOLVIMENTO LOCAL
+  # =========================================================================
+
+  dev:
+    desc: "Rodar localmente com hot reload (http://localhost:3000)"
+    cmds:
+      - bun dev
+
+  test:
+    desc: "Rodar suite de testes"
+    cmds:
+      - bun test
+
+  lint:
+    desc: "Lint + verificar formatação"
+    cmds:
+      - bun run lint
+
+  build:
+    desc: "Build de produção local"
+    cmds:
+      - bun run build
+
+  # =========================================================================
+  # DEPLOY
+  # =========================================================================
+
+  deploy:image:
+    desc: "Build e push da imagem para o registry do cluster (rsync → podman build → push)"
+    cmds:
+      - task: image:sync
+      - task: image:build
+      - task: image:push
+      - task: image:clean
+
+  deploy:cluster:
+    desc: "Aplicar manifests k8s (kubectl apply -k k8s/)"
+    cmds:
+      - kubectl apply -k {{.ROOT_DIR}}/k8s/
+
+  deploy:all:
+    desc: "Deploy completo: build imagem + apply manifests"
+    cmds:
+      - task: deploy:image
+      - task: deploy:cluster
+
+  deploy:restart:
+    desc: "Rebuild imagem + apply + rollout restart (atualiza o pod com nova imagem)"
+    cmds:
+      - task: deploy:image
+      - task: deploy:cluster
+      - kubectl rollout restart deploy/{{.APP}} -n {{.APP}}
+      - kubectl rollout status deploy/{{.APP}} -n {{.APP}} --timeout=90s
+
+  # =========================================================================
+  # OPERAÇÃO DO CLUSTER
+  # =========================================================================
+
+  app:status:
+    desc: "Status do pod e deployment no cluster"
+    cmds:
+      - kubectl get pods,deploy,svc,ingress -n {{.APP}}
+
+  app:logs:
+    desc: "Tail de logs do pod em tempo real"
+    cmds:
+      - kubectl logs -n {{.APP}} deploy/{{.APP}} -f
+
+  app:restart:
+    desc: "Rollout restart sem rebuild de imagem"
+    cmds:
+      - kubectl rollout restart deploy/{{.APP}} -n {{.APP}}
+      - kubectl rollout status deploy/{{.APP}} -n {{.APP}} --timeout=90s
+
+  app:forward:
+    desc: "Port-forward para acessar localmente em http://localhost:3000"
+    cmds:
+      - kubectl port-forward -n {{.APP}} deploy/{{.APP}} 3000:3000
+
+  app:health:
+    desc: "Checar /api/health via port-forward (teste rápido)"
+    cmds:
+      - |
+        kubectl port-forward -n {{.APP}} deploy/{{.APP}} 8888:3000 &
+        PF_PID=$!
+        sleep 2
+        curl -s http://localhost:8888/api/health
+        kill $PF_PID 2>/dev/null
+
+  app:migrate:
+    desc: "Rodar Prisma migrate deploy via job no cluster"
+    cmds:
+      - kubectl apply -f {{.ROOT_DIR}}/k8s/migration-job.yaml -n {{.APP}}
+
+  app:secret:create:
+    desc: "Criar secret no cluster com LITELLM_API_KEY e DATABASE_URL (lê do .env local)"
+    cmds:
+      - |
+        kubectl create secret generic {{.APP}}-secret -n {{.APP}} \
+          --from-literal=DATABASE_URL=${DATABASE_URL} \
+          --from-literal=LITELLM_API_KEY=${LITELLM_API_KEY} \
+          --dry-run=client -o yaml | kubectl apply -f -
+        echo "Secret {{.APP}}-secret atualizado"
+
+  app:secret:show:
+    desc: "Mostrar chaves presentes no secret (sem revelar valores)"
+    cmds:
+      - kubectl get secret {{.APP}}-secret -n {{.APP}} -o jsonpath='{.data}' | python3 -c "import sys,json; [print(k) for k in json.load(sys.stdin)]"
+
+  # =========================================================================
+  # PIPELINES INTERNAS DE IMAGEM (chamadas por deploy:image)
+  # =========================================================================
+
+  image:sync:
+    internal: true
+    cmds:
+      - |
+        rsync -az --delete \
+          --exclude='node_modules/' \
+          --exclude='.next/' \
+          --exclude='.git/' \
+          --exclude='__pycache__/' \
+          --exclude='.env' \
+          {{.APP_DIR}}/ \
+          {{.CLUSTER_USER}}@{{.CLUSTER_HOST}}:{{.REMOTE_BUILD_DIR}}/
+        echo "✓ Sync → {{.CLUSTER_HOST}}:{{.REMOTE_BUILD_DIR}}"
+
+  image:build:
+    internal: true
+    cmds:
+      - |
+        ssh {{.CLUSTER_USER}}@{{.CLUSTER_HOST}} \
+          "podman build -t {{.IMAGE}} {{.REMOTE_BUILD_DIR}}/"
+        echo "✓ Build → {{.IMAGE}}"
+
+  image:push:
+    internal: true
+    cmds:
+      - |
+        ssh {{.CLUSTER_USER}}@{{.CLUSTER_HOST}} \
+          "podman push --tls-verify=false {{.IMAGE}}"
+        echo "✓ Push → registry"
+
+  image:clean:
+    internal: true
+    cmds:
+      - |
+        ssh {{.CLUSTER_USER}}@{{.CLUSTER_HOST}} \
+          "rm -rf {{.REMOTE_BUILD_DIR}}"
+        echo "✓ Build dir removido"

@@ -1,0 +1,121 @@
+{
+  "active_plan": "/Users/goriok/sources/taberna/.sisyphus/plans/taberna.md",
+  "started_at": "2026-05-02T02:01:00.681Z",
+  "session_ids": [
+    "ses_219b1882bffeeCfEdoGdJR0RZf",
+    "ses_2192c30f2ffedBBtbKH7QA4avD",
+    "ses_219128ec7ffeFy22ba40OctBLW",
+    "ses_2191278c6ffeHMDhMGAfg92Sxt",
+    "ses_219125195ffebTG0XNFKFrv6Gi",
+    "ses_219122f16ffewkiTFW5vHQ9YN2",
+    "ses_218e99817ffeROPM7LoN5Rbb5f",
+    "ses_218e98a96ffeCLo3jqVXhaLmiC",
+    "ses_218e976ccffeb8NaNyManr6FWt",
+    "ses_218e95fdcffebtHefcz1f4mDrY"
+  ],
+  "session_origins": {
+    "ses_219b1882bffeeCfEdoGdJR0RZf": "direct",
+    "ses_2192c30f2ffedBBtbKH7QA4avD": "appended",
+    "ses_219128ec7ffeFy22ba40OctBLW": "appended",
+    "ses_2191278c6ffeHMDhMGAfg92Sxt": "appended",
+    "ses_219125195ffebTG0XNFKFrv6Gi": "appended",
+    "ses_219122f16ffewkiTFW5vHQ9YN2": "appended",
+    "ses_218e99817ffeROPM7LoN5Rbb5f": "appended",
+    "ses_218e98a96ffeCLo3jqVXhaLmiC": "appended",
+    "ses_218e976ccffeb8NaNyManr6FWt": "appended",
+    "ses_218e95fdcffebtHefcz1f4mDrY": "appended"
+  },
+  "plan_name": "taberna",
+  "agent": "atlas",
+  "task_sessions": {
+    "todo:1": {
+      "task_key": "todo:1",
+      "task_label": "1",
+      "task_title": "Project Scaffolding + Tooling",
+      "session_id": "ses_219902db1ffeDM7aFAXVgADcIm",
+      "agent": "Sisyphus-Junior",
+      "updated_at": "2026-05-02T02:26:23.179Z"
+    },
+    "todo:2": {
+      "task_key": "todo:2",
+      "task_label": "2",
+      "task_title": "Design System Tokens + Tailwind Config",
+      "session_id": "ses_2197b5b86ffeWs9Cv1YFI15CR1",
+      "agent": "Sisyphus-Junior",
+      "category": "visual-engineering",
+      "updated_at": "2026-05-02T02:34:41.428Z"
+    },
+    "todo:6": {
+      "task_key": "todo:6",
+      "task_label": "6",
+      "task_title": "Health Endpoint + k8s Probes Config",
+      "session_id": "ses_219742fd5ffeyJbN5sRMf6rJdA",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "updated_at": "2026-05-02T02:38:45.647Z"
+    },
+    "todo:9": {
+      "task_key": "todo:9",
+      "task_label": "9",
+      "task_title": "Context Projection Engine",
+      "session_id": "ses_2196009b4ffeoMn3V5brtah1KR",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "updated_at": "2026-05-02T03:05:35.414Z"
+    },
+    "todo:12": {
+      "task_key": "todo:12",
+      "task_label": "12",
+      "task_title": "POST /api/debate Route (Full 3-Round Flow)",
+      "session_id": "ses_219518d71ffelI8X4uyIfH5Qwk",
+      "agent": "Sisyphus-Junior",
+      "category": "deep",
+      "updated_at": "2026-05-02T03:30:32.310Z"
+    },
+    "todo:14": {
+      "task_key": "todo:14",
+      "task_label": "14",
+      "task_title": "Main Page Component (Input + Debate Grid + Summary)",
+      "session_id": "ses_219418e21ffeCRXrjb6VwpFEhe",
+      "agent": "Sisyphus-Junior",
+      "category": "visual-engineering",
+      "updated_at": "2026-05-02T03:47:24.580Z"
+    },
+    "todo:15": {
+      "task_key": "todo:15",
+      "task_label": "15",
+      "task_title": "Mobile Responsive Layout",
+      "session_id": "ses_21932b5e7ffesB3xRhD2DXm3pD",
+      "agent": "Sisyphus-Junior",
+      "category": "visual-engineering",
+      "updated_at": "2026-05-02T03:54:51.528Z"
+    },
+    "todo:18": {
+      "task_key": "todo:18",
+      "task_label": "18",
+      "task_title": "k8s Manifests (Namespace, ConfigMap, Deployment, Service, Ingress, Kustomization)",
+      "session_id": "ses_2192b2c54ffeI2CM3hfSdIE6k6",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "updated_at": "2026-05-02T03:58:33.945Z"
+    },
+    "todo:20": {
+      "task_key": "todo:20",
+      "task_label": "20",
+      "task_title": "Integration & E2E Tests",
+      "session_id": "ses_219269bc4ffehEzyytWuUiORny",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "updated_at": "2026-05-02T04:20:39.767Z"
+    },
+    "final-wave:f1": {
+      "task_key": "final-wave:f1",
+      "task_label": "F1",
+      "task_title": "**Plan Compliance Audit** — `oracle`",
+      "session_id": "ses_219122f16ffewkiTFW5vHQ9YN2",
+      "agent": "Sisyphus-Junior",
+      "category": "deep",
+      "updated_at": "2026-05-02T04:23:58.575Z"
+    }
+  }
+}

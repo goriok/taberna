@@ -1,0 +1,11 @@
+node_modules
+.next
+.git
+.sisyphus
+.env
+.env.*
+*.md
+tests
+__tests__
+playwright.config.ts
+vitest.config.ts

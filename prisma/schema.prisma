@@ -1,0 +1,46 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum DebateStatus {
+  ACTIVE
+  COMPLETED
+}
+
+model DebateSession {
+  id               String             @id @default(uuid())
+  createdAt        DateTime           @default(now())
+  status           DebateStatus
+  dilemma          String
+  philosopherCount Int                @default(7)
+  summaries        Summary[]
+  philosopherRounds PhilosopherRound[]
+}
+
+model Summary {
+  id        String        @id @default(uuid())
+  sessionId String
+  session   DebateSession @relation(fields: [sessionId], references: [id])
+  content   String
+  createdAt DateTime      @default(now())
+}
+
+model PhilosopherRound {
+  id              String        @id @default(uuid())
+  sessionId       String
+  session         DebateSession @relation(fields: [sessionId], references: [id])
+  philosopherName String
+  round           Int
+  content         String
+  createdAt       DateTime      @default(now())
+}

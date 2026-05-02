@@ -1,0 +1,12 @@
+[2m[WebServer] [22m[33m[1m⚠[22m[39m The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+
+Running 6 tests using 1 worker
+
+  ✓  1 [chromium] › tests/e2e/debate.spec.ts:56:7 › Debate E2E › full debate flow: submit dilemma, wait for cards, intervene, see summary (3.9s)
+  ✓  2 [chromium] › tests/e2e/debate.spec.ts:92:7 › Debate E2E › mobile viewport: full debate flow at 375px (3.8s)
+  ✓  3 [chromium] › tests/e2e/debate.spec.ts:122:7 › Debate E2E › error recovery: philosopher failure shows error card and debate continues (3.7s)
+  ✓  4 [chromium] › tests/e2e/debate.spec.ts:148:7 › Debate E2E › input validation: empty dilemma is rejected (280ms)
+  ✓  5 [chromium] › tests/e2e/debate.spec.ts:161:7 › Debate E2E › input validation: too-long dilemma is rejected (608ms)
+  ✓  6 [chromium] › tests/e2e/debate.spec.ts:174:7 › Debate E2E › reset: completing debate and clicking reset restores clean state (4.6s)
+
+  6 passed (21.4s)
