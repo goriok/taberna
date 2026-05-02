@@ -31,7 +31,7 @@ function createResponse(status: PhilosopherResponse["status"], content: string):
 
 describe("PhilosopherCard", () => {
   it("renders idle state with philosopher name and era", () => {
-    render(<PhilosopherCard philosopher={mockPhilosopher} response={null} isActive={false} />);
+    render(<PhilosopherCard philosopher={mockPhilosopher} responses={[]} currentRound={1} />);
 
     expect(screen.getByText("Socrates")).toBeTruthy();
     expect(screen.getByText("Antiguidade Clássica · Sócrates")).toBeTruthy();
@@ -40,7 +40,7 @@ describe("PhilosopherCard", () => {
 
   it("renders streaming state with response content and cursor", () => {
     const response = createResponse("streaming", "Conhece-te a ti mesmo");
-    render(<PhilosopherCard philosopher={mockPhilosopher} response={response} isActive={true} />);
+    render(<PhilosopherCard philosopher={mockPhilosopher} responses={[response]} currentRound={1} isWaiting={true} />);
 
     expect(screen.getByText("Conhece-te a ti mesmo")).toBeTruthy();
     expect(screen.getByTestId("philosopher-card").className).toContain("border-amber");
@@ -48,7 +48,7 @@ describe("PhilosopherCard", () => {
 
   it("renders complete state with full response", () => {
     const response = createResponse("complete", "A vida não examinada não vale a pena ser vivida.");
-    render(<PhilosopherCard philosopher={mockPhilosopher} response={response} isActive={false} />);
+    render(<PhilosopherCard philosopher={mockPhilosopher} responses={[response]} currentRound={1} />);
 
     expect(
       screen.getByText("A vida não examinada não vale a pena ser vivida.")
@@ -58,7 +58,7 @@ describe("PhilosopherCard", () => {
 
   it("renders error state with meditando em silencio message", () => {
     const response = createResponse("error", "");
-    render(<PhilosopherCard philosopher={mockPhilosopher} response={response} isActive={false} />);
+    render(<PhilosopherCard philosopher={mockPhilosopher} responses={[response]} currentRound={1} />);
 
     expect(screen.getByText("Sócrates está meditando em silêncio…")).toBeTruthy();
     expect(screen.getByTestId("philosopher-card").className).toContain("opacity-60");

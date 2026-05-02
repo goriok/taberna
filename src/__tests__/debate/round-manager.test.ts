@@ -70,18 +70,19 @@ describe("debateOrchestrator", () => {
   });
 
   it("rejects empty dilemma", async () => {
-    const gen = debateOrchestrator("", testPhilosophers, "test-session");
+    const gen = debateOrchestrator("", testPhilosophers, testPhilosophers, "test-session");
     await expect(gen.next()).rejects.toThrow("Dilemma cannot be empty");
   });
 
   it("rejects whitespace-only dilemma", async () => {
-    const gen = debateOrchestrator("   ", testPhilosophers, "test-session");
+    const gen = debateOrchestrator("   ", testPhilosophers, testPhilosophers, "test-session");
     await expect(gen.next()).rejects.toThrow("Dilemma cannot be empty");
   });
 
   it("yields at least 7 philosopher-start events in round 1", async () => {
     const gen = debateOrchestrator(
       "Is free will real?",
+      testPhilosophers,
       testPhilosophers,
       "test"
     );
@@ -99,6 +100,7 @@ describe("debateOrchestrator", () => {
   it("round 2 begins only after all round 1 responses complete", async () => {
     const gen = debateOrchestrator(
       "Is free will real?",
+      testPhilosophers,
       testPhilosophers,
       "test"
     );
@@ -123,6 +125,7 @@ describe("debateOrchestrator", () => {
   it("yields user-intervention event between round 2 and round 3", async () => {
     const gen = debateOrchestrator(
       "Is free will real?",
+      testPhilosophers,
       testPhilosophers,
       "test"
     );
@@ -153,6 +156,7 @@ describe("debateOrchestrator", () => {
     const gen = debateOrchestrator(
       "Is free will real?",
       testPhilosophers,
+      testPhilosophers,
       "test"
     );
     let userInterventionYielded = false;
@@ -160,7 +164,7 @@ describe("debateOrchestrator", () => {
     let result = await gen.next();
     while (!result.done) {
       if (result.value.type === "user-intervention") {
-        result = await gen.next("User says free will is an illusion");
+        result = await gen.next({ end: false, text: "User says free will is an illusion" });
         userInterventionYielded = true;
         continue;
       }
@@ -189,6 +193,7 @@ describe("debateOrchestrator", () => {
     const gen = debateOrchestrator(
       "Is free will real?",
       testPhilosophers,
+      testPhilosophers,
       "test"
     );
     const events = [];
@@ -211,6 +216,7 @@ describe("debateOrchestrator", () => {
     const gen = debateOrchestrator(
       "Is free will real?",
       testPhilosophers,
+      testPhilosophers,
       "test"
     );
     const events = [];
@@ -228,6 +234,7 @@ describe("debateOrchestrator", () => {
     const gen = debateOrchestrator(
       "Is free will real?",
       testPhilosophers,
+      testPhilosophers,
       "test"
     );
     const events = [];
@@ -243,6 +250,7 @@ describe("debateOrchestrator", () => {
     const gen = debateOrchestrator(
       "Is free will real?",
       testPhilosophers,
+      testPhilosophers,
       "test"
     );
     const events = [];
@@ -257,6 +265,7 @@ describe("debateOrchestrator", () => {
   it("round 2 is sequential (one philosopher at a time)", async () => {
     const gen = debateOrchestrator(
       "Is free will real?",
+      testPhilosophers,
       testPhilosophers,
       "test"
     );
@@ -277,6 +286,7 @@ describe("debateOrchestrator", () => {
     const gen = debateOrchestrator(
       "Is free will real?",
       testPhilosophers,
+      testPhilosophers,
       "test"
     );
     const events = [];
@@ -293,6 +303,7 @@ describe("debateOrchestrator", () => {
   it("uses philosopher system prompts in streamText calls", async () => {
     const gen = debateOrchestrator(
       "Is free will real?",
+      testPhilosophers,
       testPhilosophers,
       "test"
     );

@@ -15,6 +15,11 @@ interface GuestListProps {
 export function GuestList({ philosophers, selected, onChange }: GuestListProps) {
   const [open, setOpen] = useState(false);
 
+  const sorted = React.useMemo(
+    () => [...philosophers].sort((a, b) => a.shortName.localeCompare(b.shortName, "pt-BR")),
+    [philosophers],
+  );
+
   const toggle = (id: string) => {
     const next = new Set(selected);
     if (next.has(id)) {
@@ -31,9 +36,9 @@ export function GuestList({ philosophers, selected, onChange }: GuestListProps) 
 
   const toggleAll = () => {
     if (allSelected || selected.size >= MAX_GUESTS) {
-      onChange(new Set([philosophers[0]!.id]));
+      onChange(new Set([sorted[0]!.id]));
     } else {
-      onChange(new Set(philosophers.slice(0, MAX_GUESTS).map((p) => p.id)));
+      onChange(new Set(sorted.slice(0, MAX_GUESTS).map((p) => p.id)));
     }
   };
 
@@ -88,7 +93,7 @@ export function GuestList({ philosophers, selected, onChange }: GuestListProps) 
 
               {/* Grid of philosophers */}
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
-                {philosophers.map((p) => {
+                {sorted.map((p) => {
                   const isSelected = selected.has(p.id);
                   const isBlocked = !isSelected && selected.size >= MAX_GUESTS;
                   return (
