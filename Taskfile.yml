@@ -7,6 +7,7 @@ vars:
   APP_DIR: "{{.ROOT_DIR}}"
   REGISTRY: "localhost:5000"
   IMAGE: "{{.REGISTRY}}/{{.APP}}:latest"
+  IMAGE_MIGRATOR: "{{.REGISTRY}}/{{.APP}}:migrator"
   REMOTE_BUILD_DIR: "/tmp/build-{{.APP}}"
 
 tasks:
@@ -149,15 +150,17 @@ tasks:
     cmds:
       - |
         ssh {{.CLUSTER_USER}}@{{.CLUSTER_HOST}} \
-          "podman build -t {{.IMAGE}} {{.REMOTE_BUILD_DIR}}/"
-        echo "✓ Build → {{.IMAGE}}"
+          "podman build --target runner -t {{.IMAGE}} {{.REMOTE_BUILD_DIR}}/ && \
+           podman build --target migrator -t {{.IMAGE_MIGRATOR}} {{.REMOTE_BUILD_DIR}}/"
+        echo "✓ Build → {{.IMAGE}} + {{.IMAGE_MIGRATOR}}"
 
   image:push:
     internal: true
     cmds:
       - |
         ssh {{.CLUSTER_USER}}@{{.CLUSTER_HOST}} \
-          "podman push --tls-verify=false {{.IMAGE}}"
+          "podman push --tls-verify=false {{.IMAGE}} && \
+           podman push --tls-verify=false {{.IMAGE_MIGRATOR}}"
         echo "✓ Push → registry"
 
   image:clean:

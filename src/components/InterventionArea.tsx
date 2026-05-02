@@ -48,7 +48,7 @@ export function InterventionArea({ onSubmit, disabled }: InterventionAreaProps) 
         <button
           type="submit"
           disabled={disabled || text.trim().length === 0}
-          className="min-h-[44px] w-full rounded-md bg-primary px-6 py-3 font-sans text-sm font-semibold text-text-light shadow-md transition-all hover:bg-primary-light hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50 md:w-auto md:self-end"
+          className="btn-cta min-h-[44px] w-full rounded-md px-6 py-3 font-sans text-sm md:w-auto md:self-end"
         >
           {disabled ? "Enviando..." : "Intervir no Debate"}
         </button>

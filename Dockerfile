@@ -15,18 +15,22 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN bun x prisma generate && bun run build
 
-# Stage 3: Production runner
+# Stage 3: Migrator — lean image with only what prisma migrate deploy needs
+FROM node:22-alpine AS migrator
+COPY --from=deps /root/.bun/bin/bun /usr/local/bin/bun
+ENV PATH="/usr/local/bin:$PATH"
+WORKDIR /app
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/prisma ./prisma
+CMD ["bun", "x", "prisma", "migrate", "deploy"]
+
+# Stage 4: Production runner
 FROM node:22-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
 RUN addgroup --system --gid 1001 nodejs && \
   adduser --system --uid 1001 nextjs
-
-# prisma CLI + schema for migration job
-COPY --from=builder /app/node_modules/.bin/prisma /usr/local/bin/prisma
-COPY --from=builder /app/node_modules/@prisma /app/node_modules/@prisma
-COPY --from=builder /app/prisma ./prisma
 
 # Copy public assets (favicons, etc.)
 COPY --from=builder /app/public ./public

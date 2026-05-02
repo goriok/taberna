@@ -17,9 +17,9 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: migration
-          image: registry.registry.svc.cluster.local:5000/taberna:latest
+          image: registry.registry.svc.cluster.local:5000/taberna:migrator
           imagePullPolicy: Always
-          command: ["prisma", "migrate", "deploy"]
+          command: ["bun", "x", "prisma", "migrate", "deploy"]
           env:
             - name: DATABASE_URL
               valueFrom:

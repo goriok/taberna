@@ -424,7 +424,7 @@ export default function Home() {
                 <button
                   onClick={handleSubmitDilemma}
                   disabled={isSubmitDisabled || isLoading}
-                  className="min-h-[44px] rounded-md bg-primary px-6 py-3 font-sans text-sm font-semibold text-text-light shadow-md transition-all hover:bg-primary-light hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+                  className="btn-cta min-h-[44px] rounded-md px-6 py-3 font-sans text-sm"
                   data-testid="submit-dilemma"
                 >
                   {isLoading ? "Convocando..." : "Oferecer aos Filósofos"}
