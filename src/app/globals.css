@@ -1,38 +1,66 @@
 @import "tailwindcss";
 
-@theme inline {
-  --color-bg: #f5f0e8;
-  --color-bg-dark: #1a1814;
-  --color-text: #2c2416;
-  --color-text-light: #f5f0e8;
-  --color-primary: #1a3c2a;
-  --color-primary-light: #2d5a3f;
-  --color-accent: #b87333;
-  --color-accent-light: #d4944a;
-  --color-amber: #c77d20;
-  --color-card: #faf7f2;
-  --color-card-border: #d4c5b2;
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-bg: #15110c;
+  --color-bg-dark: #0d0a07;
+  --color-text: #ede4d3;
+  --color-text-light: #f5ecd9;
+  --color-text-muted: #a99a7e;
+  --color-primary: #8fbf9f;
+  --color-primary-light: #a8d4b6;
+  --color-accent: #d9a04e;
+  --color-accent-light: #e8b76a;
+  --color-amber: #e0a85a;
+  --color-burgundy: #b8584f;
+  --color-card: #221d16;
+  --color-card-border: #3d3327;
 
   --font-serif: var(--font-playfair), "Playfair Display", Georgia, serif;
   --font-sans: var(--font-inter), "Inter", system-ui, sans-serif;
-
-  --spacing-1: 0.25rem;
-  --spacing-2: 0.5rem;
-  --spacing-3: 0.75rem;
-  --spacing-4: 1rem;
-  --spacing-5: 1.25rem;
-  --spacing-6: 1.5rem;
-  --spacing-8: 2rem;
-  --spacing-10: 2.5rem;
-  --spacing-12: 3rem;
-  --spacing-16: 4rem;
-  --spacing-20: 5rem;
-  --spacing-24: 6rem;
 
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
+}
+
+:root {
+  --color-bg: #15110c;
+  --color-bg-dark: #0d0a07;
+  --color-text: #ede4d3;
+  --color-text-light: #f5ecd9;
+  --color-text-muted: #a99a7e;
+  --color-primary: #8fbf9f;
+  --color-primary-light: #a8d4b6;
+  --color-accent: #d9a04e;
+  --color-accent-light: #e8b76a;
+  --color-amber: #e0a85a;
+  --color-burgundy: #b8584f;
+  --color-card: #221d16;
+  --color-card-border: #3d3327;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.6), 0 2px 4px -2px rgb(0 0 0 / 0.6);
+  --shadow-lg: 0 10px 25px -3px rgb(0 0 0 / 0.7), 0 4px 6px -4px rgb(0 0 0 / 0.6);
+  --shadow-gold: 0 0 0 1px #d9a04e, 0 6px 20px rgb(217 160 78 / 0.2);
+}
+
+:root:not(.dark) {
+  --color-bg: #f5f0e8;
+  --color-bg-dark: #1a1814;
+  --color-text: #2c2416;
+  --color-text-light: #f5f0e8;
+  --color-text-muted: #6b5d48;
+  --color-primary: #1a3c2a;
+  --color-primary-light: #2d5a3f;
+  --color-accent: #b87333;
+  --color-accent-light: #d4944a;
+  --color-amber: #c77d20;
+  --color-burgundy: #7a2e2e;
+  --color-card: #faf7f2;
+  --color-card-border: #d4c5b2;
 
   --shadow-sm: 0 1px 2px 0 rgb(44 36 22 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(44 36 22 / 0.1), 0 2px 4px -2px rgb(44 36 22 / 0.1);
@@ -48,7 +76,7 @@ body {
   background-color: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
-  line-height: 1.6;
+  line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -70,7 +98,7 @@ blockquote,
   font-family: var(--font-serif);
   font-style: italic;
   font-weight: 400;
-  color: var(--color-primary);
+  color: var(--color-accent-light);
 }
 
 .gold-border {
@@ -90,22 +118,10 @@ blockquote,
 
 ::selection {
   background-color: var(--color-accent);
-  color: var(--color-text-light);
+  color: var(--color-bg-dark);
 }
 
-.dark {
-  --color-bg: #1a1814;
-  --color-card: #2d2822;
-  --color-text: #f5f0e8;
-  --color-primary: #7ab892;
-  --color-primary-light: #96ccab;
-  --color-accent: #d9a04e;
-  --color-accent-light: #e8b76a;
-  --color-amber: #d9a04e;
-  --color-card-border: #473c34;
-
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
-  --shadow-gold: 0 0 0 1px #d9a04e, 0 4px 12px rgb(217 160 78 / 0.25);
+::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.75;
 }
