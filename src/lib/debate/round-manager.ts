@@ -136,6 +136,22 @@ const TABLE_PHRASES: Record<string, { left: string; joined: string }> = {
     left: "Wang Hui parte — mas leva a longa duração consigo.",
     joined: "Wang Hui reaparece. A formação histórica ainda não foi rastreada até o fim.",
   },
+  sartre: {
+    left: "Sartre se levanta de má-fé ou autenticamente — isso só ele sabe.",
+    joined: "Sartre volta. Condenado a estar de volta, como o era a ser livre.",
+  },
+  mao: {
+    left: "Mao se retira para investigar. Sem investigação, não há direito a falar.",
+    joined: "Mao retorna com anotações. A contradição principal ainda precisa ser identificada.",
+  },
+  marcuse: {
+    left: "Marcuse parte — talvez para escutar o que ainda não foi absorvido pelo sistema.",
+    joined: "Marcuse retorna. Há necessidades falsas a distinguir das reais.",
+  },
+  baudrillard: {
+    left: "Baudrillard desaparece — ou era já um simulacro que se dissolveu.",
+    joined: "Baudrillard reaparece. O real ainda não foi completamente substituído. Ou foi?",
+  },
 };
 
 const DEFAULT_PHRASES = {

@@ -9,6 +9,10 @@ import { sennett } from "./sennett";
 import { moufawadPaul } from "./moufawad-paul";
 import { minqiLi } from "./minqi-li";
 import { wangHui } from "./wang-hui";
+import { sartre } from "./sartre";
+import { mao } from "./mao";
+import { marcuse } from "./marcuse";
+import { baudrillard } from "./baudrillard";
 
 export const philosophers: PhilosopherConfig[] = [
   heidegger,
@@ -21,6 +25,10 @@ export const philosophers: PhilosopherConfig[] = [
   moufawadPaul,
   minqiLi,
   wangHui,
+  sartre,
+  mao,
+  marcuse,
+  baudrillard,
 ];
 
 export { heidegger } from "./heidegger";
@@ -33,3 +41,7 @@ export { sennett } from "./sennett";
 export { moufawadPaul } from "./moufawad-paul";
 export { minqiLi } from "./minqi-li";
 export { wangHui } from "./wang-hui";
+export { sartre } from "./sartre";
+export { mao } from "./mao";
+export { marcuse } from "./marcuse";
+export { baudrillard } from "./baudrillard";
