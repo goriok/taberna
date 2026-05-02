@@ -131,12 +131,12 @@ export function PhilosopherCard({
       {/* Header */}
       <div className="flex items-center gap-3">
         <div
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-accent bg-bg text-lg font-bold text-primary"
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-accent bg-bg text-lg font-bold text-primary ${isStreaming || showTyping ? "avatar-thinking" : ""}`}
           aria-hidden="true"
         >
           {avatarLetter}
         </div>
-        <div className="flex flex-col">
+        <div className="flex flex-col flex-1 min-w-0">
           <span className="font-serif text-base font-bold text-text">
             {philosopher.name}
           </span>
@@ -144,6 +144,27 @@ export function PhilosopherCard({
             {philosopher.era} · {philosopher.shortName}
           </span>
         </div>
+        {/* Thinking dots — always visible when active, even with existing content */}
+        <AnimatePresence>
+          {(isStreaming || showTyping) && (
+            <motion.span
+              key="dots"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="flex shrink-0 items-center gap-1"
+            >
+              {[0, 1, 2].map((i) => (
+                <span
+                  key={i}
+                  className="inline-block h-1.5 w-1.5 rounded-full bg-amber"
+                  style={{ animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }}
+                />
+              ))}
+            </motion.span>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Previous rounds — collapsible */}
@@ -162,27 +183,6 @@ export function PhilosopherCard({
 
       {/* Current round */}
       <AnimatePresence mode="wait">
-        {showTyping && (
-          <motion.div
-            key="typing"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="flex flex-1 items-center justify-center py-6"
-          >
-            <span className="flex items-center gap-1">
-              {[0, 1, 2].map((i) => (
-                <span
-                  key={i}
-                  className="inline-block h-1.5 w-1.5 rounded-full bg-amber"
-                  style={{ animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }}
-                />
-              ))}
-            </span>
-          </motion.div>
-        )}
-
         {status === null && !latestCompleted && !showTyping && (
           <motion.div
             key="idle"
