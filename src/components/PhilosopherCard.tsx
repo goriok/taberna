@@ -11,6 +11,36 @@ interface PhilosopherCardProps {
   isActive: boolean;
 }
 
+function renderMarkdown(text: string): React.ReactNode[] {
+  // Split by bold (**text**) and italic (*text*), preserving delimiters
+  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={i}>{part.slice(2, -2)}</strong>;
+    }
+    if (part.startsWith("*") && part.endsWith("*")) {
+      return <em key={i}>{part.slice(1, -1)}</em>;
+    }
+    return part;
+  });
+}
+
+function MarkdownText({ content }: { content: string }) {
+  const paragraphs = content.split(/\n+/).filter(Boolean);
+  if (paragraphs.length <= 1) {
+    return <>{renderMarkdown(content)}</>;
+  }
+  return (
+    <>
+      {paragraphs.map((p, i) => (
+        <p key={i} className={i < paragraphs.length - 1 ? "mb-3" : ""}>
+          {renderMarkdown(p)}
+        </p>
+      ))}
+    </>
+  );
+}
+
 /**
  * PhilosopherCard — displays a philosopher's response during the debate.
  *
@@ -29,8 +59,11 @@ export function PhilosopherCard({
 
   const avatarLetter = philosopher.name.charAt(0).toUpperCase();
 
-  const borderClass =
-    status === "error"
+  const isDisabled = philosopher.enabled === false;
+
+  const borderClass = isDisabled
+    ? "border-card-border opacity-40 grayscale"
+    : status === "error"
       ? "border-card-border opacity-60"
       : isActive || status === "streaming"
         ? "border-amber"
@@ -39,7 +72,7 @@ export function PhilosopherCard({
   return (
     <div
       data-testid="philosopher-card"
-      className={`relative flex flex-col gap-3 rounded-lg border bg-card p-4 shadow-md transition-colors duration-300 md:gap-4 md:border-2 md:p-5 ${borderClass}`}
+      className={`relative flex h-full flex-col gap-3 rounded-lg border bg-card p-4 shadow-md transition-colors duration-300 md:gap-4 md:border-2 md:p-5 ${borderClass}`}
     >
       <div className="flex items-center gap-3">
         <div
@@ -82,9 +115,9 @@ export function PhilosopherCard({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="break-words font-sans text-base leading-relaxed text-text"
+            className="max-h-64 overflow-y-auto break-words font-sans text-sm leading-relaxed text-text"
           >
-            {response.content}
+            <MarkdownText content={response.content} />
             <span className="ml-0.5 inline-block h-4 w-0.5 animate-blink bg-accent align-middle" />
           </motion.div>
         )}
@@ -96,9 +129,9 @@ export function PhilosopherCard({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-            className="break-words font-sans text-base leading-relaxed text-text"
+            className="max-h-64 overflow-y-auto break-words font-sans text-sm leading-relaxed text-text"
           >
-            {response.content}
+            <MarkdownText content={response.content} />
           </motion.div>
         )}
 

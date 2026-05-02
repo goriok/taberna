@@ -22,7 +22,7 @@ export function DebateGrid({ philosophers, responses }: DebateGridProps) {
           transition: { staggerChildren: 0.08 },
         },
       }}
-      className="grid grid-cols-1 gap-4 md:gap-5 md:grid-cols-2 lg:grid-cols-3"
+      className="grid grid-cols-1 items-stretch gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3"
       data-testid="debate-grid"
     >
       {philosophers.map((philosopher) => {
@@ -34,6 +34,7 @@ export function DebateGrid({ philosophers, responses }: DebateGridProps) {
         return (
           <motion.div
             key={philosopher.id}
+            className="h-full"
             variants={{
               hidden: { opacity: 0, y: 24 },
               visible: {

@@ -12,4 +12,6 @@ export interface PhilosopherConfig {
   antiPatterns: string[];
   model: string;
   systemPrompt: string;
+  /** Set to false to exclude from debates and dim the card visually */
+  enabled?: boolean;
 }
