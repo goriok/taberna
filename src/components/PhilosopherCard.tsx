@@ -107,7 +107,7 @@ export function PhilosopherCard({
   const status = currentResponse?.status ?? null;
 
   const isStreaming = status === "streaming";
-  const showTyping = isWaiting && status === null;
+  const showTyping = isWaiting && !isStreaming;
 
   const borderClass = isDisabled
     ? "border-card-border opacity-40 grayscale"
