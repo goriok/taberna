@@ -390,7 +390,6 @@ export default function Home() {
                 philosophers={activePhilosophers}
                 responses={state.responses}
                 currentRound={state.currentRound}
-                userInterventions={state.userInterventions}
                 isWaiting={isLoading && state.phase === "debating"}
               />
 

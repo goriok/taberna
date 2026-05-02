@@ -9,7 +9,6 @@ interface PhilosopherCardProps {
   philosopher: PhilosopherConfig;
   responses: PhilosopherResponse[];
   currentRound: number;
-  userInterventions: Record<number, string>;
   isWaiting?: boolean;
 }
 
@@ -43,12 +42,10 @@ function MarkdownText({ content }: { content: string }) {
 function CollapsibleRound({
   round,
   content,
-  userText,
   isLast,
 }: {
   round: number;
   content: string;
-  userText?: string;
   isLast: boolean;
 }) {
   const [open, setOpen] = useState(false);
@@ -56,15 +53,8 @@ function CollapsibleRound({
 
   if (isLast) {
     return (
-      <div className="flex flex-col gap-2">
-        <div className="break-words font-sans text-sm leading-relaxed text-text">
-          <MarkdownText content={content} />
-        </div>
-        {userText && (
-          <div className="mt-2 rounded border-l-2 border-accent/50 pl-3 font-sans text-xs italic text-text/60">
-            Você: "{userText}"
-          </div>
-        )}
+      <div className="break-words font-sans text-sm leading-relaxed text-text">
+        <MarkdownText content={content} />
       </div>
     );
   }
@@ -96,11 +86,6 @@ function CollapsibleRound({
               <div className="break-words font-sans text-sm leading-relaxed text-text/70">
                 <MarkdownText content={content} />
               </div>
-              {userText && (
-                <div className="mt-2 rounded border-l-2 border-accent/50 pl-3 font-sans text-xs italic text-text/50">
-                  Você: "{userText}"
-                </div>
-              )}
             </div>
           </motion.div>
         )}
@@ -113,7 +98,6 @@ export function PhilosopherCard({
   philosopher,
   responses,
   currentRound,
-  userInterventions,
   isWaiting = false,
 }: PhilosopherCardProps) {
   const isDisabled = philosopher.enabled === false;
@@ -170,7 +154,6 @@ export function PhilosopherCard({
               key={r.round}
               round={r.round}
               content={r.content}
-              userText={userInterventions[r.round]}
               isLast={false}
             />
           ))}
@@ -241,7 +224,6 @@ export function PhilosopherCard({
             <CollapsibleRound
               round={latestCompleted.round}
               content={latestCompleted.content}
-              userText={userInterventions[latestCompleted.round]}
               isLast={true}
             />
           </motion.div>
