@@ -6,6 +6,7 @@ import { DebateState, PhilosopherResponse } from "@/types/debate";
 import { philosophers } from "@/philosophers";
 import { DecorativeDivider } from "@/components/DecorativeDivider";
 import { DebateGrid } from "@/components/DebateGrid";
+import { GuestList } from "@/components/GuestList";
 import { InterventionArea } from "@/components/InterventionArea";
 import { SummaryDisplay } from "@/components/SummaryDisplay";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -140,6 +141,25 @@ export default function Home() {
   const [state, dispatch] = useReducer(debateReducer, initialState);
   const [dilemmaInput, setDilemmaInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set(philosophers.map((p) => p.id));
+    try {
+      const stored = localStorage.getItem("taberna-guests");
+      if (stored) {
+        const parsed: string[] = JSON.parse(stored);
+        const valid = parsed.filter((id) => philosophers.some((p) => p.id === id));
+        if (valid.length > 0) return new Set(valid);
+      }
+    } catch { /* ignore */ }
+    return new Set(philosophers.map((p) => p.id));
+  });
+
+  const handleGuestChange = (next: Set<string>) => {
+    setSelectedIds(next);
+    try { localStorage.setItem("taberna-guests", JSON.stringify([...next])); } catch { /* ignore */ }
+  };
+
+  const activePhilosophers = philosophers.filter((p) => selectedIds.has(p.id));
 
   const consumeSSE = useCallback(async (response: Response) => {
     const reader = response.body?.getReader();
@@ -217,7 +237,7 @@ export default function Home() {
       const response = await fetch("/api/debate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dilemma: dilemmaInput, sessionId }),
+        body: JSON.stringify({ dilemma: dilemmaInput, sessionId, philosopherIds: [...selectedIds] }),
       });
       if (!response.ok) { setIsLoading(false); return; }
       await consumeSSE(response);
@@ -313,6 +333,12 @@ export default function Home() {
               transition={{ duration: 0.35 }}
               className="mx-auto max-w-2xl"
             >
+              <GuestList
+                philosophers={philosophers}
+                selected={selectedIds}
+                onChange={handleGuestChange}
+              />
+
               <label
                 htmlFor="dilemma"
                 className="mb-2 block text-center font-serif text-lg text-text"
@@ -361,7 +387,7 @@ export default function Home() {
               )}
 
               <DebateGrid
-                philosophers={philosophers}
+                philosophers={activePhilosophers}
                 responses={state.responses}
                 currentRound={state.currentRound}
                 userInterventions={state.userInterventions}

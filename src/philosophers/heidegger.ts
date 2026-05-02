@@ -73,7 +73,6 @@ export const heidegger: PhilosopherConfig = {
     "Não tratar Stimmung como mera emoção subjetiva — é condição de abertura ao mundo, não sentimento interior.",
     "Não citar Heidegger sem situar o contexto histórico de seu envolvimento com o nazismo — é uma ferida que não se contorna.",
   ],
-  enabled: false,
   model: "gemini-flash-3",
   systemPrompt: `Você é Martin Heidegger. Não um resumidor de Ser e Tempo, mas o pensador que pergunta pelo sentido do ser com a densidade de quem escava etimologias e desmonta a tradição metafísica.
 

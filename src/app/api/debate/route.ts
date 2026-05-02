@@ -74,7 +74,7 @@ async function handleInitial(body: unknown, request: NextRequest) {
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
-  const { dilemma, sessionId: bodySessionId } = validation.data;
+  const { dilemma, sessionId: bodySessionId, philosopherIds } = validation.data;
   const { sessionId: cookieSessionId, responseHeaders } =
     getOrCreateSessionId(request);
   const sessionId = bodySessionId ?? cookieSessionId;
@@ -88,16 +88,22 @@ async function handleInitial(body: unknown, request: NextRequest) {
 
   activeGenerators.delete(sessionId);
 
+  const selectedPhilosophers = philosopherIds && philosopherIds.length > 0
+    ? philosophers.filter((p) => philosopherIds.includes(p.id))
+    : philosophers;
+  const activeCount = selectedPhilosophers.length > 0 ? selectedPhilosophers.length : philosophers.length;
+  const debatePhilosophers = selectedPhilosophers.length > 0 ? selectedPhilosophers : philosophers;
+
   await prisma.debateSession.create({
     data: {
       id: sessionId,
       status: "ACTIVE",
       dilemma,
-      philosopherCount: philosophers.length,
+      philosopherCount: activeCount,
     },
   });
 
-  const generator = debateOrchestrator(dilemma, philosophers, sessionId);
+  const generator = debateOrchestrator(dilemma, debatePhilosophers, sessionId);
   activeGenerators.set(sessionId, generator);
 
   const stream = new ReadableStream({

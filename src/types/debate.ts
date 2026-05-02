@@ -35,6 +35,7 @@ export interface DebateState {
 export const DebateRequestSchema = z.object({
   dilemma: z.string().min(10),
   sessionId: z.string().uuid().optional(),
+  philosopherIds: z.array(z.string()).min(1).optional(),
 });
 
 export type DebateRequest = z.infer<typeof DebateRequestSchema>;

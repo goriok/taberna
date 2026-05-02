@@ -15,7 +15,7 @@ export const philosophers: PhilosopherConfig[] = [
   han,
   kosik,
   sennett,
-].filter((p) => p.enabled !== false);
+];
 
 export { heidegger } from "./heidegger";
 export { nietzsche } from "./nietzsche";
