@@ -87,6 +87,7 @@ function clearPersistedState() {
 }
 
 type Action =
+  | { type: "RESTORE"; state: DebateState }
   | { type: "SUBMIT_DILEMMA"; dilemma: string; sessionId: string; activePhilosopherIds: string[] }
   | { type: "PHILOSOPHER_START"; philosopherName: string; round: number }
   | { type: "PHILOSOPHER_CHUNK"; philosopherName: string; round: number; chunk: string }
@@ -112,6 +113,9 @@ function findResponseIndex(
 
 function debateReducer(state: DebateState, action: Action): DebateState {
   switch (action.type) {
+    case "RESTORE":
+      return action.state;
+
     case "SUBMIT_DILEMMA":
       return {
         ...state,
@@ -213,29 +217,38 @@ function generateSessionId(): string {
 }
 
 export default function Home() {
-  const [state, dispatch] = useReducer(debateReducer, undefined, loadPersistedState);
-  const [dilemmaInput, setDilemmaInput] = useState(() => {
-    if (typeof window === "undefined") return "";
-    try {
-      const raw = localStorage.getItem(SESSION_KEY);
-      if (!raw) return "";
-      const saved = JSON.parse(raw) as Partial<DebateState>;
-      return saved.dilemma ?? "";
-    } catch { return ""; }
-  });
+  const [state, dispatch] = useReducer(debateReducer, initialState);
+  const [dilemmaInput, setDilemmaInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => {
-    if (typeof window === "undefined") return new Set(philosophers.slice(0, 5).map((p) => p.id));
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(
+    () => new Set(philosophers.slice(0, 5).map((p) => p.id))
+  );
+  // Restore persisted state after mount to avoid SSR/hydration mismatch
+  useEffect(() => {
+    // Restore selected guests
     try {
       const stored = localStorage.getItem("taberna-guests");
       if (stored) {
         const parsed: string[] = JSON.parse(stored);
         const valid = parsed.filter((id) => philosophers.some((p) => p.id === id)).slice(0, 5);
-        if (valid.length > 0) return new Set(valid);
+        if (valid.length > 0) setSelectedIds(new Set(valid));
       }
     } catch { /* ignore */ }
-    return new Set(philosophers.slice(0, 5).map((p) => p.id));
-  });
+
+    // Restore debate session
+    const saved = loadPersistedState();
+    if (saved.phase !== "idle") {
+      dispatch({ type: "RESTORE", state: saved });
+      try {
+        const raw = localStorage.getItem(SESSION_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw) as Partial<DebateState>;
+          if (parsed.dilemma) setDilemmaInput(parsed.dilemma);
+        }
+      } catch { /* ignore */ }
+    }
+
+  }, []);
 
   const handleGuestChange = (next: Set<string>) => {
     setSelectedIds(next);
