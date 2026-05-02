@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { PhilosopherConfig } from "@/types/philosopher";
 import { DecorativeDivider } from "./DecorativeDivider";
 
-const MAX_GUESTS = 3;
+const MAX_GUESTS = 5;
 
 interface InterventionAreaProps {
   onContinue: (text: string, activeIds: string[]) => void;

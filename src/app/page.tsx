@@ -224,16 +224,16 @@ export default function Home() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => {
-    if (typeof window === "undefined") return new Set(philosophers.slice(0, 3).map((p) => p.id));
+    if (typeof window === "undefined") return new Set(philosophers.slice(0, 5).map((p) => p.id));
     try {
       const stored = localStorage.getItem("taberna-guests");
       if (stored) {
         const parsed: string[] = JSON.parse(stored);
-        const valid = parsed.filter((id) => philosophers.some((p) => p.id === id)).slice(0, 3);
+        const valid = parsed.filter((id) => philosophers.some((p) => p.id === id)).slice(0, 5);
         if (valid.length > 0) return new Set(valid);
       }
     } catch { /* ignore */ }
-    return new Set(philosophers.slice(0, 3).map((p) => p.id));
+    return new Set(philosophers.slice(0, 5).map((p) => p.id));
   });
 
   const handleGuestChange = (next: Set<string>) => {

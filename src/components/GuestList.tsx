@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PhilosopherConfig } from "@/types/philosopher";
 
-const MAX_GUESTS = 3;
+const MAX_GUESTS = 5;
 
 interface GuestListProps {
   philosophers: PhilosopherConfig[];
