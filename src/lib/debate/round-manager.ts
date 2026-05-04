@@ -200,6 +200,10 @@ const TABLE_PHRASES: Record<string, { left: string; joined: string }> = {
     left: "Aristóteles se levanta — há casos particulares lá fora que ainda precisam ser observados e classificados.",
     joined: "Aristóteles retorna com novas distinções a fazer. Amicus Plato — mas o real estava aqui o tempo todo.",
   },
+  espinosa: {
+    left: "Espinosa recolhe as lentes e se retira em silêncio — não rir, não chorar, não execrar; compreender.",
+    joined: "Espinosa volta à mesa com a serenidade geométrica de quem já reduziu o tumulto a definições e proposições.",
+  },
 };
 
 const DEFAULT_PHRASES = {

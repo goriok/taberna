@@ -53,16 +53,8 @@ function CollapsibleRound({
   const [open, setOpen] = useState(false);
   const snippet = content.slice(0, 80).trimEnd() + (content.length > 80 ? "…" : "");
 
-  if (isLast) {
-    return (
-      <div className="break-words font-sans text-sm leading-relaxed text-text">
-        <MarkdownText content={content} />
-      </div>
-    );
-  }
-
   return (
-    <div className="rounded border border-card-border/50">
+    <div className={`rounded border ${isLast ? 'border-accent' : 'border-card-border/50'}`} data-testid="round-container">
       <button
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left"

@@ -25,6 +25,7 @@ import { kierkegaard } from "./kierkegaard";
 import { socrates } from "./socrates";
 import { platao } from "./platao";
 import { aristoteles } from "./aristoteles";
+import { espinosa } from "./espinosa";
 
 export const philosophers: PhilosopherConfig[] = [
   heidegger,
@@ -53,6 +54,7 @@ export const philosophers: PhilosopherConfig[] = [
   socrates,
   platao,
   aristoteles,
+  espinosa,
 ];
 
 export { heidegger } from "./heidegger";
@@ -81,3 +83,4 @@ export { kierkegaard } from "./kierkegaard";
 export { socrates } from "./socrates";
 export { platao } from "./platao";
 export { aristoteles } from "./aristoteles";
+export { espinosa } from "./espinosa";
