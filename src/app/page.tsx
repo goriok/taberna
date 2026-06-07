@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useReducer, useState } from "react";
+import React, { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { DebateState, PhilosopherResponse, TableEvent } from "@/types/debate";
@@ -220,6 +220,9 @@ export default function Home() {
   const [state, dispatch] = useReducer(debateReducer, initialState);
   const [dilemmaInput, setDilemmaInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const responsesRef = useRef(state.responses);
+  useEffect(() => { responsesRef.current = state.responses; }, [state.responses]);
+
   const [selectedIds, setSelectedIds] = useState<Set<string>>(
     () => new Set(philosophers.slice(0, 5).map((p) => p.id))
   );
@@ -398,7 +401,7 @@ export default function Home() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             sessionId: state.sessionId,
-            philosopherResponses: state.responses.filter((r) => r.status === "complete"),
+            philosopherResponses: responsesRef.current.filter((r) => r.status === "complete"),
           }),
         });
         if (cancelled || !response.ok) { setIsLoading(false); return; }
@@ -413,10 +416,10 @@ export default function Home() {
     })();
 
     return () => { cancelled = true; };
-  }, [state.phase, state.sessionId, state.responses]);
+  }, [state.phase, state.sessionId]);
 
   const isSubmitDisabled = dilemmaInput.length < MIN_DILEMMA_LENGTH;
-  const showGrid = state.phase === "debating" || state.phase === "user-intervention";
+  const showGrid = state.phase === "debating" || state.phase === "user-intervention" || state.phase === "summary";
 
   return (
     <main className="flex min-h-full flex-col items-center px-4 py-8 md:px-6 md:py-10 lg:px-8 lg:py-12">
@@ -535,6 +538,19 @@ export default function Home() {
                 isWaiting={isLoading && state.phase === "debating"}
               />
 
+              {state.phase === "summary" && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="mx-auto mt-8 max-w-2xl text-center"
+                >
+                  <DecorativeDivider className="mb-6" />
+                  <p className="animate-pulse font-serif text-lg text-accent">
+                    Os filósofos contemplam a noite... a Crônica está sendo escrita.
+                  </p>
+                </motion.div>
+              )}
+
               {state.phase === "user-intervention" && (
                 <InterventionArea
                   onContinue={(text, ids) => handleIntervention(text, false, ids)}
@@ -558,6 +574,10 @@ export default function Home() {
             >
               <SummaryDisplay
                 summary={state.summary}
+                dilemma={state.dilemma}
+                responses={state.responses}
+                userInterventions={state.userInterventions}
+                tableEvents={state.tableEvents}
                 onReset={() => {
                   setDilemmaInput("");
                   clearPersistedState();

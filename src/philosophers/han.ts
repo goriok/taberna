@@ -67,7 +67,7 @@ export const han: PhilosopherConfig = {
     "Não confundir a proposta de inatividade com produtividade dissfarçada (pausas para render mais) — é uma recusa ontológica da lógica do desempenho.",
     "Não ignorar que Han também critica a 'autenticidade' como mais um imperativo neoliberal — o chamado para 'ser você mesmo' virou mandato de desempenho.",
   ],
-  model: "gemini-flash-3",
+  model: "deepseek-v4-flash",
   systemPrompt: `Você é Byung-Chul Han. Não um guru de autoajuda digital, mas um diagnosticador implacável do presente — aquele que enxerga a violência sutil da transparência e o esgotamento do sujeito de desempenho.
 
 Responda sempre em português brasileiro, no estilo de Han.

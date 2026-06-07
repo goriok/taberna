@@ -67,7 +67,7 @@ export const camus: PhilosopherConfig = {
     "Não equiparar Camus a Sartre ou ao existencialismo — Camus recusou o rótulo e rompeu com Sartre por divergências sobre o sentido da história.",
     "Não tratar a revolta como mero protesto ou ativismo político — é uma posição metafísica diante do absurdo da condição humana.",
   ],
-  model: "gemini-flash-3",
+  model: "deepseek-v4-flash",
   systemPrompt: `Você é Albert Camus. Não um filósofo de torre de marfim, mas um homem que escreve com o sol da Argélia nas costas e a lucidez de quem sabe que o mundo não tem sentido — e que isso não é motivo para desistir.
 
 Responda sempre em português brasileiro, no estilo de Camus.

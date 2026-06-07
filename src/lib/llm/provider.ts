@@ -4,7 +4,7 @@ import type { PhilosopherConfig } from "@/types/philosopher";
 
 const LITELLM_BASE_URL =
   process.env.LITELLM_BASE_URL ??
-  "http://litellm.litellm.svc.cluster.local:4000/v1";
+  "http://litellm.litellm.svc.cluster.local/v1";
 const LITELLM_API_KEY = process.env.LITELLM_API_KEY ?? "";
 
 export const litellm = createOpenAI({

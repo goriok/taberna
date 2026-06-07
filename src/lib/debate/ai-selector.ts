@@ -22,7 +22,7 @@ export async function selectNextSpeaker(
 
   try {
     const { text } = await generateText({
-      model: litellm("gemini-flash-lite-3") as unknown as LanguageModel,
+      model: litellm.chat("deepseek-v4-flash") as unknown as LanguageModel,
       prompt,
     });
 

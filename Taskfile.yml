@@ -56,6 +56,7 @@ tasks:
   deploy:cluster:
     desc: "Aplicar manifests k8s (kubectl apply -k k8s/)"
     cmds:
+      - kubectl delete job taberna-migration -n {{.APP}} --ignore-not-found
       - kubectl apply -k {{.ROOT_DIR}}/k8s/
 
   deploy:all:

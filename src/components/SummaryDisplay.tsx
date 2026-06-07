@@ -1,15 +1,63 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { DecorativeDivider } from "./DecorativeDivider";
+import type { PhilosopherResponse, TableEvent } from "@/types/debate";
+import {
+  buildDebateMarkdown,
+  buildDebateFilename,
+} from "@/lib/export/markdown";
 
 interface SummaryDisplayProps {
   summary: string;
+  dilemma: string;
+  responses: PhilosopherResponse[];
+  userInterventions: Record<number, string>;
+  tableEvents: TableEvent[];
   onReset: () => void;
 }
 
-export function SummaryDisplay({ summary, onReset }: SummaryDisplayProps) {
+export function SummaryDisplay({
+  summary,
+  dilemma,
+  responses,
+  userInterventions,
+  tableEvents,
+  onReset,
+}: SummaryDisplayProps) {
+  const [copied, setCopied] = useState(false);
+
+  function getMarkdown() {
+    return buildDebateMarkdown({
+      dilemma,
+      responses,
+      userInterventions,
+      tableEvents,
+      summary,
+    });
+  }
+
+  function handleDownload() {
+    const md = getMarkdown();
+    const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = buildDebateFilename(dilemma, new Date());
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function handleCopy() {
+    await navigator.clipboard.writeText(getMarkdown());
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  const btnClass =
+    "min-h-[44px] rounded-md border-2 border-accent bg-transparent px-6 py-3 font-sans text-sm font-semibold text-accent shadow-sm transition-all hover:bg-accent hover:text-text-light hover:shadow-md md:px-8";
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -33,11 +81,22 @@ export function SummaryDisplay({ summary, onReset }: SummaryDisplayProps) {
           ))}
         </div>
 
-        <div className="flex justify-center">
+        <div className="flex flex-wrap justify-center gap-3">
           <button
-            onClick={onReset}
-            className="min-h-[44px] rounded-md border-2 border-accent bg-transparent px-6 py-3 font-sans text-sm font-semibold text-accent shadow-sm transition-all hover:bg-accent hover:text-text-light hover:shadow-md md:px-8"
+            onClick={handleDownload}
+            className={btnClass}
+            data-testid="export-markdown-button"
           >
+            Baixar Markdown
+          </button>
+          <button
+            onClick={handleCopy}
+            className={btnClass}
+            data-testid="copy-markdown-button"
+          >
+            {copied ? "Copiado!" : "Copiar"}
+          </button>
+          <button onClick={onReset} className={btnClass}>
             Nova Noite na Taberna
           </button>
         </div>

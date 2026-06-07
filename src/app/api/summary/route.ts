@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
     );
 
     const { text } = await generateText({
-      model: litellm("gemini-flash-lite-3") as unknown as LanguageModel,
+      model: litellm("deepseek-v4-flash") as unknown as LanguageModel,
       prompt,
     });
 
